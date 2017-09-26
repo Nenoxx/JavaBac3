@@ -11,15 +11,12 @@
 #include <netdb.h>
 #include "string.h"
 /*----TO DO LIST----
-
 1) Faire des gestionnaires d'erreurs en fonction de errno (en gros, des switch(errno) case...: case...:)
    histoire de pouvoir fournir des erreurs plus explicites (voir p55 bouquin TCP/IP)
-
 2) Fonctions de receive
-
 */
 
-#define TAILLE_MSG 100
+#define TAILLE_MSG 2000
 
 void CreateCheckinConfig()
 {
@@ -171,13 +168,11 @@ int ConnectSocket(int SocketHandle, struct sockaddr_in SocketAddress)
 
 /* --- LA PREPARATION EST A FAIRE DANS LE FICHIER .C(PP) PRINCIPAL ! La structure doit être "préparée" avant d'être donnée en argument !
        (l'ennui de la repréparer à chaque fois c'est que 1) perte de performances 2) On écrase les valeurs précédentes qui auraient pu être simplement réutilisées
-
 	//Préparation de la structure sockaddr_in
 	memset(&SocketAddress, 0, sizeof(struct sockaddr_in));
 	SocketAddress.sin_family = AF_INET;
 	SocketAddress.sin_port = htons(getPort()); //conversion du numéro de port au format réseau
 	memcpy(&SocketAddress.sin_addr, CurrentHost->h_addr, CurrentHost->h_length);
-
 */
 	//Connexion de la socket à l'internet du cul
 	if(bind(SocketHandle, (struct sockaddr*)&SocketAddress, sizeof(struct sockaddr_in)) == -1){
@@ -267,12 +262,101 @@ int SocketSend(int SocketHandle, char* msg)
 	}
 }
 
+int getMTU(int SocketHandle)
+{
+	socklen_t optlen;
+	int taille;
+
+	optlen = sizeof(int);
+
+	if((getsockopt(SocketHandle, IPPROTO_TCP, TCP_MAXSEG, &taille, &optlen)) == -1){
+		printf("Erreur sur le getsockopt de la socket %d\n", errno);
+		exit(1);
+	}
+	else{
+		printf("MTU = %d\n", taille);
+		return taille;
+	}
+}
+
+int EndOfMessage(char* msg, int taille)
+{
+	int i, trouve = 0;
+
+	//Recherche de '<EOM>'
+
+	for(i = 0; i<taille-5 && !trouve, i++) //-5 parce que pas besoin de check les 4 derniers caractères si le celui d'avant n'est pas '<'
+	{
+		if(msg[i] == '<'){
+			if(msg[++i] == 'E'){
+				if(msg[++i] == 'O'){
+					if(msg[++i] == 'M'){
+						if(msg[++i] == '>')
+							trouve = 1;
+					}
+				}
+			}
+		}
+	}
+
+	return trouve;
+}
+
 //Méthode 1 de receive : tant qu'il y a encore des bytes à lire.
-int SocketRcvFull();
+char* SocketRcvFull(int SocketHandle, int taille)
+{
+	int tailleMsgRecu = 0, nbBytes, fin;
+	char buf[TAILLE_MSG*2];
+	char MsgRecu[TAILLE_MSG];
+
+	memset(buf,0 ,sizeof(buf));
+	do
+	{
+			printf("Réception d'un message...\n");
+			if(nbBytes = (recv(SocketHandle, buf, taille, 0)) != -1){
+				memcpy((char*)MsgRecu + tailleMsgRecu, buf, nbBytes);
+				tailleMsgRecu += nbBytes;
+				printf("Nombre de bytes reçus : %d\n", nbBytes);
+				printf("Taille totale : %d\n", tailleMsgRecu);
+			}
+			else
+			{
+				printf("Erreur de réception du message !\n");
+			}
+	}
+	while(nbBytes != 0 && nbBytes != -1); //Tant qu'il y a des bytes à recevoir (et pas d'erreur)
+}
 
 //Méthode 2 de receive : Caractère (ou chaine de caractères) de fin de séquence. Proposition : <EOM> (pour End of message) ?
 //Attention à ne pas afficher le <EOM>.
 
-int SocketRcvEOM();
+int SocketRcvEOM(int SocketHandle, int taille)
+{
+	int tailleMsgRecu = 0, nbBytes, fin;
+	char buf[TAILLE_MSG*2];
+	char MsgRecu[TAILLE_MSG];
+	int finDetectee = 0;
+
+	memset(buf,0 ,sizeof(buf));
+	do
+	{
+			printf("Réception d'un message...\n");
+			if(nbBytes = (recv(SocketHandle, buf, taille, 0)) != -1){
+				finDetectee = EndOfMessage(buf, nbBytes);
+				memcpy((char*)MsgRecu + tailleMsgRecu, buf, nbBytes);
+				tailleMsgRecu += nbBytes;
+				printf("Nombre de bytes reçus : %d\n", nbBytes);
+				printf("Taille totale : %d\n", tailleMsgRecu);
+				if(finDetectee)
+					printf("Fin de message détectée\n");
+			}
+			else
+			{
+				printf("Erreur de réception du message !\n");
+				return 0;
+			}
+	}
+	while(!finDetectee && nbBytes != -1);
+}
 
 #endif

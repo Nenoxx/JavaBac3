@@ -16,7 +16,12 @@
 
 
 /*----TO DO LIST----
-1) Faire des gestionnaires d'erreurs en fonction de errno (en gros, des switch(errno) case...: case...:)
+
+1) Corriger les derniers petits bugs (genre le putain de fgets qui veut pas lire stdin)
+2) Threader tout le bordel
+3) Tester sous Unix et prier Jésus que ça fonctionne
+4) Ne pas céder à la panique
+999999) Faire des gestionnaires d'erreurs en fonction de errno (en gros, des switch(errno) case...: case...:)
    histoire de pouvoir fournir des erreurs plus explicites (voir p55 bouquin TCP/IP)
 */
 

@@ -38,7 +38,7 @@ int main()
 			strcpy(msg, "");
 			//input
 			printf("\nMessage a envoyer : ");
-			fgets(msg, TAILLE_MSG, stdin); //ARNAUD, FAIS MOI FONCTIONNER CETTE FONCTION DE MERDE STP
+			fgets(msg, TAILLE_MSG, stdin); //ARNAUD, FAIS MOI FONCTIONNER CETTE FONCTION DE MERDE STP!
 			msg[strcspn(msg, "\n")] = '\0'; //On remplace le \n du fgets par un \0
 			strcat(msg, "<EOM>");
 			//send

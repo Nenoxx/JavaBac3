@@ -11,8 +11,6 @@ int main()
 	struct hostent *CurrentHost;
 	struct in_addr adrIP;
 
-
-
 	//TEST CONNEXION MONOCLIENT
 	CreateCheckinConfig();
 	

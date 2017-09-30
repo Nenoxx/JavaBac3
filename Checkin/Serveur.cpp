@@ -40,7 +40,7 @@ int main()
 
 void TraitementMessage(char* msg)
 {
-	if(!strcmp(msg, "EOC") || !strcmp(msg, "CLIENT INTERRUPTED")){
+	if(strcmp(msg, "EOC") == 0 || strcmp(msg, "CLIENT INTERRUPTED") == 0){
 		printf("---Fin de connexion---");
 		close(SocketEcoute);
 		close(SocketService);

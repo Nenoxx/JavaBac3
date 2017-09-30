@@ -430,9 +430,12 @@ char* SocketRcvEOM(int SocketHandle, int taille)
 	do
 	{
 			if((nbBytes = (recv(SocketHandle, buf, taille, 0))) != -1){
+				printf("1\n");
 				finDetectee = EndOfMessage(buf, nbBytes);
 				memcpy((char*)MsgRecu + tailleMsgRecu, buf, nbBytes);
 				tailleMsgRecu += nbBytes;
+				if(finDetectee)
+					printf("2\n");
 			}
 			else
 			{

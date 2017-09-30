@@ -38,7 +38,7 @@ int main()
 			strcpy(msg, "");
 			//input
 			printf("\nMessage a envoyer : ");
-			while(1) fgets(msg, TAILLE_MSG, stdin);
+			fgets(msg, TAILLE_MSG, stdin);
 			msg[strcspn(msg, "\n")] = '\0'; //On remplace le \n du fgets par un \0
 			strcat(msg, "<EOM>");
 			//send

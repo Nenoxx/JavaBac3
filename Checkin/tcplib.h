@@ -354,7 +354,7 @@ int SocketSend(int SocketHandle, char* msg)
 		return 0; //Pas d'exit ici, il faut clore toutes les sockets avant	
 	}
 	else{
-		printf("\nEnvoi OK\n");
+		//printf("\nEnvoi OK\n");
 		return 1;
 	}
 }
@@ -422,11 +422,7 @@ int deleteEOM(char* msg, int taille)
 					if(msg[++i] == 'M'){
 						if(msg[++i] == '>'){
 							trouve = 1;
-							msg[i-4] = ' ';
-							msg[i-3] = ' ';
-							msg[i-2] = ' ';
-							msg[i-1] = ' ';
-							msg[i] = ' ';
+							msg[i-4] = '\0'; //on arrete la chaîne au <
 						}
 					}
 				}
@@ -448,7 +444,7 @@ char* SocketRcvFull(int SocketHandle, int taille)
 	char* MsgRecu = (char*)malloc(sizeof(char)*TAILLE_MSG);
 
 	memset(buf,0 ,sizeof(buf));
-	printf("\nRéception d'un message...\n");
+	//printf("\nRéception d'un message...\n");
 	do
 	{
 			if((nbBytes = (recv(SocketHandle, buf, taille, 0))) != -1){
@@ -475,8 +471,9 @@ char* SocketRcvFull(int SocketHandle, int taille)
 Méthode 2 de receive : Caractère (ou chaine de caractères) de fin de séquence. Proposition : <EOM> (pour End of message) ?
 //Attention à ne pas afficher le <EOM>.
 */
-char* SocketRcvEOM(int SocketHandle, int taille)
+int SocketRcvEOM(int SocketHandle, char *rcv, int taille)
 {
+/*
 	int tailleMsgRecu = 0, nbBytes = 0, fin;
 	char buf[TAILLE_MSG*2];
 	char* MsgRecu = (char*)malloc(sizeof(char)*TAILLE_MSG);
@@ -507,6 +504,19 @@ char* SocketRcvEOM(int SocketHandle, int taille)
 	}
 	else
 		printf("Erreur : BAD MESSAGE FORMAT\n");
+		*/
+	
+	int nbBytes = 0;
+		
+	if((nbBytes = (recv(SocketHandle, rcv, TAILLE_MSG, 0))) != -1){
+		deleteEOM(rcv, nbBytes);
+	}
+	else
+	{
+		printf("Erreur de recv\n");
+		
+	}
+	return nbBytes;
 }
 
 

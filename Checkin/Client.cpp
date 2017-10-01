@@ -10,8 +10,9 @@ int main()
 	struct sockaddr_in SocketAddress; // contient port et ip de la socket
 	struct hostent *CurrentHost; // infos sur la machine
 	char r, msg[TAILLE_MSG] = "";
-	char *rcv;
+	char rcv[TAILLE_MSG];
 	struct sigaction act;
+	int retour=0;
 	
 	//armement de SIGINT
 	act.sa_handler = handlerSIGINT;
@@ -47,11 +48,15 @@ int main()
 		msg[strcspn(msg, "\n")] = '\0'; //On remplace le \n du fgets par un \0
 		strcat(msg, "<EOM>");
 		SocketSend(SocketClient, msg);
-		printf("Message de connexion envoié\n");
+		printf("Message de connexion envoié: [%s]\n", msg);
 		
 		//6) Réception réponse
-		rcv = SocketRcvEOM(SocketClient, TAILLE_MSG);
-		printf("Réponse du serveur: %s\n", rcv);
+		retour = SocketRcvEOM(SocketClient, rcv, TAILLE_MSG);
+		if(retour > 0){
+			printf("Réponse du serveur: [%s]\n", rcv);
+		}
+		else
+			printf("Erreur de receive\n");
 		
 				
 		while(1){
@@ -61,12 +66,13 @@ int main()
 			printf("\nMessage a envoyer : ");
 			fgets(msg, TAILLE_MSG, stdin); //ARNAUD, FAIS MOI FONCTIONNER CETTE FONCTION DE MERDE STP!
 			msg[strcspn(msg, "\n")] = '\0'; //On remplace le \n du fgets par un \0
+			printf("message entré: [%s], taille %d\n", msg, strlen(msg));
 			strcat(msg, "<EOM>");
 			//send
 			SocketSend(SocketClient, msg); 
-			printf("Message envoyé: %s\nAttente d'un ACK...\n", msg);
-			rcv = SocketRcvEOM(SocketClient, TAILLE_MSG);
-			printf("Réponse du serveur: %s\n", rcv);
+			printf("Message envoyé: [%s]\nAttente d'un ACK...\n", msg);
+			SocketRcvEOM(SocketClient,rcv, TAILLE_MSG);
+			printf("Réponse du serveur: [%s]\n", rcv);
 		}
 	}
 	else{

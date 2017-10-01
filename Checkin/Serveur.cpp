@@ -11,6 +11,7 @@ int main()
 	struct hostent *CurrentHost; // infos sur la machine
 	struct in_addr adrIP; // addresse ip de la machine
 	int retour=0;
+	char rcv[TAILLE_MSG];
 
 	//Vérifie si le fichier de config existe, le crée sinon
 	CreateCheckinConfig();
@@ -30,6 +31,7 @@ int main()
 	
 	//3) Préparation de la struct sockaddr_in
 	SocketAddress = initSocketAddress(SocketAddress, CurrentHost);		
+	printf("SER> Struct SocketAddress initialisée\n");
 	
 	//4) Bind
 	ConnectSocket(SocketEcoute, SocketAddress, CurrentHost);
@@ -50,8 +52,14 @@ int main()
 
 	//test de quelques messages
 	for(int i=0; i<10; i++){
-
-		TraitementMessage(SocketRcvEOM(SocketService, TAILLE_MSG));
+		//7) Réception d'un message
+		retour = SocketRcvEOM(SocketService, rcv, TAILLE_MSG);
+		if(retour > 0){
+			//8) Traitement du message
+			TraitementMessage(rcv);
+		}
+		else
+			break;
 	}
 	
 	CloseSocket(SocketEcoute);
@@ -65,14 +73,10 @@ Effectue un traitement en fonction du message recu
 */
 void TraitementMessage(char* msg)
 {
-
-		//7) Réception d'un message
+	printf("SER> message recu: [%s], taille %d\n", msg, strlen(msg));
 		
-		//8) Traitement du message
 	if(strcmp(msg, "EOC") == 0 || strcmp(msg, "CLIENT INTERRUPTED") == 0){
-		printf("---Fin de connexion---");
-		close(SocketEcoute);
-		close(SocketService);
+		printf("---Fin de connexion---\n");
 	}
 	else{
 		SocketSend(SocketService, "SER> ACK Message bien reçu<EOM>\n");

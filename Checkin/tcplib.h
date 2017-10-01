@@ -26,24 +26,30 @@
 */
 
 #define TAILLE_MSG 2000
+// Ports 26020 à 26029
+#define PORT_CHCK 26020
 
+//---------------------------------------------------------------------------------------
+/*
+Crée le fichier de config si celui-ci n'existe pas déjà
+*/
 void CreateCheckinConfig()
 {
 	FILE* fp;
 	char Content[1024];
 	
-	char hostname[1024]; //Question portabilité, on va directement intégrer le bon hostname de la machine dans le fichier de config.
+	char hostname[1024]={0}; //Question portabilité, on va directement intégrer le bon hostname de la machine dans le fichier de config.
 	hostname[1023] = '\0';
-	gethostname(hostname, 1023);
+	gethostname(hostname, 1023); // récup le nom de la machine
 	//printf("Hostname : %s\n", hostname);
-	strcpy(Content, "###CONFIG FILE###\nport = 42069\nhostname = ");
+	strcpy(Content, "###CONFIG FILE###\nport = 26020\nhostname = ");
 	strcat(Content, hostname);
 	strcat(Content, "\n###EOF###\n");
 	//printf("CONTENT : %s\n", Content); // <-- OK
 	
 	if((fp = fopen("checkin.config", "r")) == NULL){ // ! Check si le fichier n'existe pas, pas question d'écraser l'ancien
 		printf("checkin config n'existe pas, tentive de création...\n");
-		if((fp = fopen("checkin.config", "a+")) != NULL){
+		if((fp = fopen("checkin.config", "w")) != NULL){
 			printf("création OK\n");
 			fwrite(Content, sizeof(char), sizeof(Content)-1, fp);
 			printf("Initialisation du fichier OK\n");
@@ -51,9 +57,16 @@ void CreateCheckinConfig()
 		}	
 	}
 	else
-		printf("Le fichier config existe déjà");
+	{
+		printf("Le fichier config existe déjà\n");
+		fclose(fp);
+	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Ouvre le fichier de config et cherche le port
+*/
 unsigned int getPort()
 {
 	FILE* fp;
@@ -108,6 +121,10 @@ unsigned int getPort()
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Ouvre le fichier de config et recherche le hostname
+*/
 char* getHostname()
 {
 	FILE* fp;
@@ -161,23 +178,27 @@ char* getHostname()
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Création d'une socket de protocole TCP en mode connecté fiable
+*/
 int CreateSocket(int SocketHandle)
 {
-	//Création d'une socket de protocole TCP en mode connecté fiable, possibilité de donner une option à l'appel
-	//de fonction pour pouvoir créer une socket IP en mode bas niveau? Besoin?
+
 	SocketHandle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(SocketHandle == -1){
 		printf("Erreur de création de la socket %d\n", errno);
-		return 0;
 	}
 	else{
 		printf("Création socket %d OK\n", SocketHandle);
-		return SocketHandle;
 	}
-
-	
+	return SocketHandle;
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Effectue un shutdown sur la connexion
+*/
 int ShutConnection(int SocketHandle)
 {
 	//Bloque la connexion en écriture, permet de terminer les lectures
@@ -191,6 +212,10 @@ int ShutConnection(int SocketHandle)
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Termine une socket
+*/
 int CloseSocket(int SocketHandle)
 {
 	//Termine une socket, appeler cette fonction après ShutConnection.
@@ -205,9 +230,12 @@ int CloseSocket(int SocketHandle)
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Lie la socket à une adresse ip et un port
+*/
 int ConnectSocket(int SocketHandle, struct sockaddr_in SocketAddress, struct hostent *CurrentHost)
 {
-	//Connexion de la socket à l'internet du cul
 	//printf("SocketEcoute = %d\n", SocketHandle);
 	if(bind(SocketHandle, (struct sockaddr*)&SocketAddress, sizeof(struct sockaddr_in)) == -1){
 		printf("Erreur de bind sur la socket %d\n", SocketHandle);
@@ -235,12 +263,14 @@ int ConnectSocket(int SocketHandle, struct sockaddr_in SocketAddress, struct hos
 		printf("Bind adresse et port socket OK\n");
 		return 1;
 	}
-	
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Mise en attente d'une connexion par un client
+*/
 int SocketWait(int SocketHandle)
 {
-	//Mise en attente d'une connexion par un client
 	if(listen(SocketHandle, SOMAXCONN) == -1){
 		printf("Erreur de mise en écoute de la socket %d sur le réseau\n", errno);
 		CloseSocket(SocketHandle); //pas besoin de shutdown avant ici, pour le coup
@@ -252,14 +282,15 @@ int SocketWait(int SocketHandle)
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Prise en charge d'un client par la socket d'écoute (BLOQUANT)
+*/
 int GetClient(int SocketHandle, struct sockaddr_in SocketAddress)
 {
 	socklen_t tailleSocketAddress = sizeof(struct sockaddr_in);
 	int hTemp;
 
-
-	//Prise en charge d'un client par la socket d'écoute
-	//BLOQUANT
 	if((hTemp = accept(SocketHandle, (struct sockaddr*)&SocketAddress, &tailleSocketAddress)) == -1){
 		printf("Erreur lors de la prise en charge d'un client par la socket %d\n", errno);
 		ShutConnection(SocketHandle);
@@ -272,7 +303,10 @@ int GetClient(int SocketHandle, struct sockaddr_in SocketAddress)
 	}
 }
 
-//Permet à un client d'initier une connexion à une socket serveur
+//---------------------------------------------------------------------------------------
+/*
+Permet à un client d'initier une connexion à une socket serveur
+*/
 int ClientConnect(int SocketHandle, struct sockaddr_in SocketAddress)
 {
 	socklen_t tailleSocketAddress = sizeof(struct sockaddr_in);
@@ -309,6 +343,10 @@ int ClientConnect(int SocketHandle, struct sockaddr_in SocketAddress)
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Envoi d'un message sur une socket
+*/
 int SocketSend(int SocketHandle, char* msg)
 {
 	if(send(SocketHandle, msg, TAILLE_MSG, 0) == -1){
@@ -321,6 +359,10 @@ int SocketSend(int SocketHandle, char* msg)
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Récupère le MTU d'une socket
+*/
 int getMTU(int SocketHandle)
 {
 	socklen_t optlen;
@@ -338,11 +380,13 @@ int getMTU(int SocketHandle)
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Recherche de '<EOM>' dans une chaine
+*/
 int EndOfMessage(char* msg, int taille)
 {
 	int i, trouve = 0;
-
-	//Recherche de '<EOM>'
 
 	for(i = 0; i<taille-5 && !trouve; i++) //-5 parce que pas besoin de check les 4 derniers caractères si le celui d'avant n'est pas '<'
 	{
@@ -357,10 +401,13 @@ int EndOfMessage(char* msg, int taille)
 			}
 		}
 	}
-
 	return trouve;
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Supprime le <EOM> à la fin d'une chaine
+*/
 int deleteEOM(char* msg, int taille)
 {
 	int i, trouve = 0;
@@ -390,12 +437,15 @@ int deleteEOM(char* msg, int taille)
 	return trouve;
 }
 
-//Méthode 1 de receive : tant qu'il y a encore des bytes à lire.
+//---------------------------------------------------------------------------------------
+/*
+Méthode 1 de receive : tant qu'il y a encore des bytes à lire.
+*/
 char* SocketRcvFull(int SocketHandle, int taille)
 {
 	int tailleMsgRecu = 0, nbBytes = 0, fin;
 	char buf[TAILLE_MSG];
-	char* MsgRecu = (char*)malloc(sizeof(TAILLE_MSG*2));
+	char* MsgRecu = (char*)malloc(sizeof(char)*TAILLE_MSG);
 
 	memset(buf,0 ,sizeof(buf));
 	printf("\nRéception d'un message...\n");
@@ -420,30 +470,32 @@ char* SocketRcvFull(int SocketHandle, int taille)
 	}
 }
 
-//Méthode 2 de receive : Caractère (ou chaine de caractères) de fin de séquence. Proposition : <EOM> (pour End of message) ?
+//---------------------------------------------------------------------------------------
+/*
+Méthode 2 de receive : Caractère (ou chaine de caractères) de fin de séquence. Proposition : <EOM> (pour End of message) ?
 //Attention à ne pas afficher le <EOM>.
-
+*/
 char* SocketRcvEOM(int SocketHandle, int taille)
 {
 	int tailleMsgRecu = 0, nbBytes = 0, fin;
 	char buf[TAILLE_MSG*2];
-	char* MsgRecu = (char*)malloc(sizeof(TAILLE_MSG*2));
+	char* MsgRecu = (char*)malloc(sizeof(char)*TAILLE_MSG);
 	int finDetectee = 0;
 
 	memset(buf,0 ,sizeof(buf));
 	printf("Réception d'un message...\n");
 	do
 	{
-			if((nbBytes = (recv(SocketHandle, buf, taille, 0))) != -1){
-				finDetectee = EndOfMessage(buf, nbBytes);
-				memcpy((char*)MsgRecu + tailleMsgRecu, buf, nbBytes);
-				tailleMsgRecu += nbBytes;
-			}
-			else
-			{
-				printf("\nErreur de réception du message !\n");
-				return 0;
-			}
+		if((nbBytes = (recv(SocketHandle, buf, taille, 0))) != -1){
+			finDetectee = EndOfMessage(buf, nbBytes);
+			memcpy((char*)MsgRecu + tailleMsgRecu, buf, nbBytes);
+			tailleMsgRecu += nbBytes;
+		}
+		else
+		{
+			printf("\nErreur de réception du message !\n");
+			return 0;
+		}
 	}
 	while(!finDetectee && nbBytes != -1);
 
@@ -457,12 +509,16 @@ char* SocketRcvEOM(int SocketHandle, int taille)
 		printf("Erreur : BAD MESSAGE FORMAT\n");
 }
 
+
+//---------------------------------------------------------------------------------------
+/*
+Acquisition des infos sur l'ordinateur local
+*/
 struct hostent* getLocalHost()
 {
 	struct hostent* CurrentHost;
-	//Acquisition des infos sur l'ordinateur local
 
-	if((CurrentHost = gethostbyname( getHostname() )) == 0){
+	if((CurrentHost = gethostbyname( getHostname() )) == 0){//récupère le hostname dans le fichier de config puis cherche les infos dessus
 		printf("\nErreur d'acquisition d'infos sur le host %d\n", errno);
 		switch(errno){
 			case HOST_NOT_FOUND: printf("l'hote spécifié n'existe pas\n"); break;
@@ -481,15 +537,17 @@ struct hostent* getLocalHost()
 	}
 }
 
+//---------------------------------------------------------------------------------------
+/*
+Préparation de la structure sockaddr_in
 
+--- LA PREPARATION EST A FAIRE DANS LE FICHIER .C(PP) PRINCIPAL ! La structure doit être "préparée" avant d'être donnée en argument !
+(l'ennui de la repréparer à chaque fois c'est que 1) perte de performances 2) On écrase les valeurs précédentes qui auraient pu être simplement réutilisées
+*/
 struct sockaddr_in initSocketAddress(struct sockaddr_in SocketAddress, struct hostent *CurrentHost)
 {
-	/*--- LA PREPARATION EST A FAIRE DANS LE FICHIER .C(PP) PRINCIPAL ! La structure doit être "préparée" avant d'être donnée en argument !
-       	(l'ennui de la repréparer à chaque fois c'est que 1) perte de performances 2) On écrase les valeurs précédentes qui auraient pu être 		simplement réutilisées*/
-
-	//Préparation de la structure sockaddr_in
 	memset(&SocketAddress, 0, sizeof(struct sockaddr_in));
-	SocketAddress.sin_family = AF_INET;
+	SocketAddress.sin_family = AF_INET; //domaine
 	SocketAddress.sin_port = htons(getPort()); //conversion du numéro de port au format réseau
 	memcpy(&SocketAddress.sin_addr, CurrentHost->h_addr, CurrentHost->h_length);
 	//printf("APRES MEMCPY : %s\n", inet_ntoa(SocketAddress.sin_addr));

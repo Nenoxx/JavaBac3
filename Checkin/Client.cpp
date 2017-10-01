@@ -7,15 +7,12 @@ int SocketClient;
 
 int main()
 {
-	struct sockaddr_in SocketAddress;
-	struct hostent *CurrentHost;
+	struct sockaddr_in SocketAddress; // contient port et ip de la socket
+	struct hostent *CurrentHost; // infos sur la machine
 	char r, msg[TAILLE_MSG] = "";
+	char *rcv;
 	struct sigaction act;
 	
-	CurrentHost = getLocalHost();
-	SocketAddress = initSocketAddress(SocketAddress, CurrentHost);
-	SocketClient = CreateSocket(SocketClient);
-
 	//armement de SIGINT
 	act.sa_handler = handlerSIGINT;
 	sigemptyset(&act.sa_mask);
@@ -23,16 +20,40 @@ int main()
 	sigaction(SIGINT, &act, 0);
 	
 	
+	
+	//1) Création de la socket
+	SocketClient = CreateSocket(SocketClient);
+	
+	//2) Informations sur l'ordinateur DISTANT
+	CurrentHost = getLocalHost(); // à modif car on récup les infos de l'ordi local
+	
+	//3) Préparation de la struct sockaddr_in
+	SocketAddress = initSocketAddress(SocketAddress, CurrentHost);
+	
+	//4) Connexion
 	do{
 	
 		printf("\nCLI> Se connecter? (O/N) : ");
 		fflush(stdin);
 		r = getchar();
-	}
-	while(r != 'O' && r != 'N');
-
-	if(r == 'O'){
+	}while(r != 'O' && r != 'N' && r != 'o' && r != 'n');
+	
+	
+	if(r == 'O' || r == 'o'){
 		ClientConnect(SocketClient, SocketAddress);
+		
+		//5) Envoi d'un message de connexion
+		strcpy(msg, "Hello, demande de connexion");
+		msg[strcspn(msg, "\n")] = '\0'; //On remplace le \n du fgets par un \0
+		strcat(msg, "<EOM>");
+		SocketSend(SocketClient, msg);
+		printf("Message de connexion envoié\n");
+		
+		//6) Réception réponse
+		rcv = SocketRcvEOM(SocketClient, TAILLE_MSG);
+		printf("Réponse du serveur: %s\n", rcv);
+		
+				
 		while(1){
 			//init
 			strcpy(msg, "");
@@ -43,24 +64,32 @@ int main()
 			strcat(msg, "<EOM>");
 			//send
 			SocketSend(SocketClient, msg); 
-			printf("Message envoyé\nAttente d'un ACK...\n");
-			SocketRcvEOM(SocketClient, TAILLE_MSG);
+			printf("Message envoyé: %s\nAttente d'un ACK...\n", msg);
+			rcv = SocketRcvEOM(SocketClient, TAILLE_MSG);
+			printf("Réponse du serveur: %s\n", rcv);
 		}
 	}
 	else{
-		close(SocketClient);
+		CloseSocket(SocketClient);
 		exit(0);
 	}
 	
-	close(SocketClient);
+	//5) Envoi d'un message
+	//6) Réception de la réponse
+	//7)
+		
+	CloseSocket(SocketClient);
 	return 0;
 }
 
-
+//---------------------------------------------------------------------------------------
+/*
+Réception d'un SIGINT
+*/
 void handlerSIGINT(int sig)
 {
 	printf("CTRL+C détecté\n");
-	SocketSend(SocketClient, "CLIENT INTERRUPTED");	
+	SocketSend(SocketClient, "CLIENT INTERRUPTED<EOM>");	
 	close(SocketClient);
 	exit(1);
 }

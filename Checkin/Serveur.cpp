@@ -7,44 +7,75 @@ void TraitementMessage(char*);
 
 int main()
 {
-	struct sockaddr_in SocketAddress;
-	struct hostent *CurrentHost;
-	struct in_addr adrIP;
+	struct sockaddr_in SocketAddress; // contient port et ip de la socket
+	struct hostent *CurrentHost; // infos sur la machine
+	struct in_addr adrIP; // addresse ip de la machine
+	int retour=0;
 
-	//TEST CONNEXION MONOCLIENT
+	//Vérifie si le fichier de config existe, le crée sinon
 	CreateCheckinConfig();
 	
-	CurrentHost = getLocalHost();
-	memcpy(&adrIP, CurrentHost->h_addr, CurrentHost->h_length);
-	SocketAddress = initSocketAddress(SocketAddress, CurrentHost);
-	
-	//Création de la socket
-	SocketEcoute = CreateSocket(SocketEcoute);	
-	
+	//1) Création de la socket
+	SocketEcoute = CreateSocket(SocketEcoute);
+	if(SocketEcoute <= 0)
+	{
+		printf("SER-> Pas de socket\n");
+		exit(1);
+	}
 	printf("SER> SocketEcoute = %d\n", SocketEcoute);
-	//Attachement de la socket à une adresse
+	
+	//2) Informations sur l'ordinateut local
+	CurrentHost = getLocalHost();
+	memcpy(&adrIP, CurrentHost->h_addr, CurrentHost->h_length); // récup l'adresse ip de l'hote
+	
+	//3) Préparation de la struct sockaddr_in
+	SocketAddress = initSocketAddress(SocketAddress, CurrentHost);		
+	
+	//4) Bind
 	ConnectSocket(SocketEcoute, SocketAddress, CurrentHost);
-	//Mise à l'écoute d'une requête de connexion
-	while(1){
+	printf("SER> Bind ok\n");
+	
+	//while(1){
+		//5) Listen
 		SocketWait(SocketEcoute);
+		printf("SER> Listen ok\n");
+	
+		//6) Accept
 		SocketService = GetClient(SocketEcoute, SocketAddress); //Duplication de socket
+		printf("SER> Accept ok\n");
+		
+		//7) fournir SocketService à un thread libre
+		
+	//}
+
+	//test de quelques messages
+	for(int i=0; i<10; i++){
+
 		TraitementMessage(SocketRcvEOM(SocketService, TAILLE_MSG));
 	}
 	
-	close(SocketEcoute);
-	close(SocketService);
+	CloseSocket(SocketEcoute);
+	CloseSocket(SocketService);
 	return 0;
 }
 
+
+/*
+Effectue un traitement en fonction du message recu
+*/
 void TraitementMessage(char* msg)
 {
+
+		//7) Réception d'un message
+		
+		//8) Traitement du message
 	if(strcmp(msg, "EOC") == 0 || strcmp(msg, "CLIENT INTERRUPTED") == 0){
 		printf("---Fin de connexion---");
 		close(SocketEcoute);
 		close(SocketService);
 	}
 	else{
-		SocketSend(SocketService, "SER> ACK Message bien reçu <EOM>\n");
+		SocketSend(SocketService, "SER> ACK Message bien reçu<EOM>\n");
 	}
 }
 

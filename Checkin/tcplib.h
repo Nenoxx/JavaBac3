@@ -33,6 +33,23 @@
 /*
 Crée le fichier de config si celui-ci n'existe pas déjà
 */
+
+/*
+Permet de séparer le numéro de type de requête du message en lui-même et de récupérer les deux valeurs
+OUTPUT : Le numéro correspondant au type de la requête
+INPUT : L'adresse du message entier, reçu par la socket.
+*/
+int getRequest(char* request)
+{
+	char sep[] = getProperty("separateur_CIMP"), char* content;
+	int requestType, tailleSep = strlen(sep);
+
+	//exemple de message de connexion : 1`aaa`bbb<EOM>
+	content = strtok(request, sep);
+	sscanf(content, "%d", &requestType); //Le premier paramètre étant le type de requête, on le converti en int.
+	strncpy(request, request + (tailleSep + 1), strlen(request) - (tailleSep + 1 ); //On recopie le contenu de la requête sans le type de requête et premier séparateur
+}
+
 void CreateCheckinConfig()
 {
 	FILE* fp;
@@ -44,7 +61,7 @@ void CreateCheckinConfig()
 	//printf("Hostname : %s\n", hostname);
 	strcpy(Content, "###CONFIG FILE###\nport_service = 26020\nport_admin = 26029\nhostname = ");
 	strcat(Content, hostname);
-	strcat(Content, "\nseparateur_CIMP = `\nseparateur_fichier = ;\n###EOF###\n");
+	strcat(Content, "\nseparateur_CIMP = `\nseparateur_fichier = ;\nnb_threads = 5\n###EOF###\n");
 	//printf("CONTENT : %s\n", Content); // <-- OK
 	
 	if((fp = fopen("checkin.config", "r")) == NULL){ // ! Check si le fichier n'existe pas, pas question d'écraser l'ancien
@@ -69,6 +86,7 @@ Ouvre le fichier de config et cherche le port
 */
 unsigned int getPort(char* nomPort)
 {
+	/*
 	FILE* fp;
 	unsigned int Port;
 	
@@ -118,14 +136,20 @@ unsigned int getPort(char* nomPort)
 	else{
 		printf("Erreur lors de l'ouverture du fichier checkin.config\n");
 		exit(1);
-	}
+	} */
+
+	int port = atoi(getProperty(nomPort));
+	if(port > 0)
+		return port;
+	else
+		printf("Erreur : INVALID PORT NUMBER\n");
 }
 
 //---------------------------------------------------------------------------------------
 /*
 Ouvre le fichier de config et recherche le hostname
 */
-char* getHostname()
+char* getProperty(char* propertyName)
 {
 	FILE* fp;
 	
@@ -150,13 +174,14 @@ char* getHostname()
 				//DEBUG
 				//printf("\n%s = %s", property, value);
 			
-				if(strcmp(property, "hostname") == 0){
-					if(strcmp(value, "INSERT_HOSTNAME_HERE") != 0){
-						char* returnvalue = (char*)malloc(sizeof(strlen(value)));
-						strcpy(returnvalue, value);
-						//printf("\nVALUE = %s", value);
-						return returnvalue;
-					}
+				if(strcmp(property, propertyName) == 0){
+					char* returnvalue = NULL;
+					if(returnvalue != NULL) 
+						free(returnvalue);
+					returnvalue = (char*)malloc(sizeof(strlen(value)));
+					strcpy(returnvalue, value);
+					//printf("\nVALUE = %s", value);
+					return returnvalue;
 				}
 				else{
 					if(strcmp(property, "###EOF###") == 0)

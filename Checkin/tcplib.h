@@ -36,22 +36,22 @@ Crée le fichier de config si celui-ci n'existe pas déjà
 void CreateCheckinConfig()
 {
 	FILE* fp;
-	char Content[1024];
+	char Content[1024] = {""};
 	
 	char hostname[1024]={0}; //Question portabilité, on va directement intégrer le bon hostname de la machine dans le fichier de config.
 	hostname[1023] = '\0';
 	gethostname(hostname, 1023); // récup le nom de la machine
 	//printf("Hostname : %s\n", hostname);
-	strcpy(Content, "###CONFIG FILE###\nport = 26020\nhostname = ");
+	strcpy(Content, "###CONFIG FILE###\nport_service = 26020\nport_admin = 26029\nhostname = ");
 	strcat(Content, hostname);
-	strcat(Content, "\n###EOF###\n");
+	strcat(Content, "\nseparateur_CIMP = `\nseparateur_fichier = ;\n###EOF###\n");
 	//printf("CONTENT : %s\n", Content); // <-- OK
 	
 	if((fp = fopen("checkin.config", "r")) == NULL){ // ! Check si le fichier n'existe pas, pas question d'écraser l'ancien
 		printf("checkin config n'existe pas, tentive de création...\n");
-		if((fp = fopen("checkin.config", "w")) != NULL){
+		if((fp = fopen("checkin.config", "a+")) != NULL){
 			printf("création OK\n");
-			fwrite(Content, sizeof(char), sizeof(Content)-1, fp);
+			fwrite(Content, sizeof(char), strlen(Content)-1, fp);
 			printf("Initialisation du fichier OK\n");
 			fclose(fp);
 		}	
@@ -67,7 +67,7 @@ void CreateCheckinConfig()
 /*
 Ouvre le fichier de config et cherche le port
 */
-unsigned int getPort()
+unsigned int getPort(char* nomPort)
 {
 	FILE* fp;
 	unsigned int Port;
@@ -93,7 +93,7 @@ unsigned int getPort()
 				//DEBUG
 				//printf("\n%s = %s", property, value);
 			
-				if(strcmp(property, "port") == 0){
+				if(strcmp(property, nomPort) == 0){
 					if(strcmp(value, "INSERT_PORT_HERE") != 0){
 						sscanf(value, "%d", &Port); //On converti la chaine de caractère en int	
 						//printf("\nVALUE = %d", Port);
@@ -554,11 +554,11 @@ Préparation de la structure sockaddr_in
 --- LA PREPARATION EST A FAIRE DANS LE FICHIER .C(PP) PRINCIPAL ! La structure doit être "préparée" avant d'être donnée en argument !
 (l'ennui de la repréparer à chaque fois c'est que 1) perte de performances 2) On écrase les valeurs précédentes qui auraient pu être simplement réutilisées
 */
-struct sockaddr_in initSocketAddress(struct sockaddr_in SocketAddress, struct hostent *CurrentHost)
+struct sockaddr_in initSocketAddress(struct sockaddr_in SocketAddress, struct hostent *CurrentHost, char* nomPort)
 {
 	memset(&SocketAddress, 0, sizeof(struct sockaddr_in));
 	SocketAddress.sin_family = AF_INET; //domaine
-	SocketAddress.sin_port = htons(getPort()); //conversion du numéro de port au format réseau
+	SocketAddress.sin_port = htons(getPort(nomPort)); //conversion du numéro de port au format réseau
 	memcpy(&SocketAddress.sin_addr, CurrentHost->h_addr, CurrentHost->h_length);
 	//printf("APRES MEMCPY : %s\n", inet_ntoa(SocketAddress.sin_addr));
 	return SocketAddress;

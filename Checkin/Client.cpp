@@ -29,7 +29,7 @@ int main()
 	CurrentHost = getLocalHost(); // à modif car on récup les infos de l'ordi local
 	
 	//3) Préparation de la struct sockaddr_in
-	SocketAddress = initSocketAddress(SocketAddress, CurrentHost);
+	SocketAddress = initSocketAddress(SocketAddress, CurrentHost, "26020");
 	
 	//4) Connexion
 	do{

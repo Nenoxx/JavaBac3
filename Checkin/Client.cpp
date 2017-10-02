@@ -1,5 +1,7 @@
 #include "tcplib.h"
 #include "csvlib.h"
+#include "cimp.h"
+
 #include <signal.h>
 
 void handlerSIGINT(int sig);
@@ -10,10 +12,16 @@ int SocketClient;
 int main()
 {
 	struct sockaddr_in SocketAddress; // contient port et ip de la socket
-	struct hostent *CurrentHost; // infos sur la machine
-	char msg[TAILLE_MSG] = "", rcv[TAILLE_MSG], value[30], loginpwd[65];
+	struct hostent *infosHost; // infos sur la machine
+	struct in_addr adrIP;
 	struct sigaction act;
+	
+	char msg[TAILLE_MSG] = {0}, rcv[TAILLE_MSG]={0}, login[30], password[30], *separator;
+	int req=0, choix;
 	int retour=0, loginok = 0, deco = 0;
+	
+	
+	separator = getProperty("separateur_CIMP");
 	
 	//armement de SIGINT
 	act.sa_handler = handlerSIGINT;
@@ -26,14 +34,95 @@ int main()
 	SocketClient = CreateSocket(SocketClient);
 	
 	//2) Informations sur l'ordinateur DISTANT
-	CurrentHost = getLocalHost(); // à modif car on récup les infos de l'ordi local
+	if((infosHost = gethostbyname(getProperty("hostname")))==0){
+		printf("CLI> erreur acquisition infos sur le host distant\n");
+		exit(1);
+	}
+	memcpy(&adrIP, infosHost->h_addr, infosHost->h_length);
+	printf("CLI> hote distant: ip: %s\n", inet_ntoa(adrIP));
+	
 	
 	//3) Préparation de la struct sockaddr_in
-	SocketAddress = initSocketAddress(SocketAddress, CurrentHost, "port_service");
-	while(deco == 0){
-		//4) Connexion
+	SocketAddress = initSocketAddress(SocketAddress, infosHost, "port_service");
+	
+
+	//4) Connexion
+	ClientConnect(SocketClient, SocketAddress);
+	printf("\nCLI> connexion au serveur...\n");
+		
+	//si réception NOK
+	SocketRcvEOM(SocketClient, rcv, TAILLE_MSG);
+	req = getRequest(rcv);
+	if(req == NOK){
+		CloseSocket(SocketClient);
+		printf("Serveur plein, retenter plus tard\n");
+		exit(1);
+	}
+	printf("CLI> Connecté au serveur\n");
+	
+	int cpt = 0;	
+	do{
+		printf("Entrez votre login:");
+		scanf("%s", login);
+		printf("Entrez votre password:");
+		scanf("%s", password);
+		
+		strcpy(msg, login);
+		strcat(msg, separator);
+		strcat(msg, password);
+		SocketSendReqEOM(SocketClient, LOGIN_OFFICER, separator, msg);
+		
+		cpt++;
+	}while(cpt < 5);
+	if(cpt == 5){
+		CloseSocket(SocketClient);
+		printf("Trop de tentative infructueuses\n");
+		exit(1);
+	}
+	printf("CLI> connexion autorisée\n");
+		
+	// boucle debut
+		// envoi LOGIN_OFFICER avec login, pwd
+		// réception LOGIN_OFFICER avec OK ou NOK
+		// si NOK -> nouvel essai
+			// si cpt essai == 5 -> envoi EOC
+			// CloseSocket(SocketClient);
+			// printf("Trop de tentative infructueuses\n");
+			// exit(1);
+		
+	// boucle fin
+	
+	// connexion autorisée:
+	//boucle debut
+		// afficher menu:
+		//do{
+		//		clear_screen();
+		//printf("#### APPLICATION CHECK-IN ####\n");
+		//printf("        MENU PRINCIPAL\n1) Enregistrer des billets\n2) Déconnexion\n\nVotre choix: ");
+		//}while(choix != '1' && choix != '2');
+		
+		switch(choix)
+		{
+			case '1': 
+				break;
+				
+			case '2':
+				break;
+		}
+	//boucle fin
+		
+		
+		
+		
+		
+		
+		
+		
+		while(deco == 0)
+		{
+		
 		printf("#### APPLICATION CHECK-IN ####\n\n\n");
-		do{
+		/*do{
 			//init
 			RowList *rlist = NULL;
 			strcpy(value, "");
@@ -59,9 +148,9 @@ int main()
 				loginok = 1;
 			}
 		}
-		while(loginok == 0);
+		while(loginok == 0);*/
 	
-		ClientConnect(SocketClient, SocketAddress);
+		
 		
 		//5) Envoi d'un message de connexion
 		strcpy(msg, "Hello, demande de connexion");

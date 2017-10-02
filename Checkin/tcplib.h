@@ -86,58 +86,6 @@ Ouvre le fichier de config et cherche le port
 */
 unsigned int getPort(char* nomPort)
 {
-	/*
-	FILE* fp;
-	unsigned int Port;
-	
-	if((fp = fopen("checkin.config", "r")) != NULL)
-	{
-		char line[50], property[30], value[30];
-		int stop = 0;
-
-		while(!stop){
-			//Réinitialisation des valeurs
-			strcpy(line, "");
-			strcpy(property, "");
-			strcpy(value, "");
-	
-			//On lit une ligne du fichier config et on la segmente
-			if(fgets(line, 50, fp) != NULL){
-				line[strlen(line)-1] = '\0'; // <--- Pour enlever le '\n' mit par le fgets
-				//printf("LINE : %s\n", line);
-				sscanf(line, "%s = %s", property, value);
-
-			
-				//DEBUG
-				//printf("\n%s = %s", property, value);
-			
-				if(strcmp(property, nomPort) == 0){
-					if(strcmp(value, "INSERT_PORT_HERE") != 0){
-						sscanf(value, "%d", &Port); //On converti la chaine de caractère en int	
-						//printf("\nVALUE = %d", Port);
-						fclose(fp);
-						return Port;
-					}
-				}
-				else{
-					if(strcmp(property, "###EOF###") == 0)
-						stop = 1;
-				}
-			}
-			else{
-				printf("Erreur de lecture dans le fichier\n");
-				exit(1);
-			}
-		}
-		printf("Port non-trouvé, veuillez vérifier le fichier de configuration.\n"); //Si on sort du while c'est qu'on a atteint la fin du fichier sans trouver
-		fclose(fp);	
-		return 0;
-	}
-	else{
-		printf("Erreur lors de l'ouverture du fichier checkin.config\n");
-		exit(1);
-	} */
-
 	int port = atoi(getProperty(nomPort));
 	if(port > 0)
 		return port;
@@ -494,43 +442,10 @@ char* SocketRcvFull(int SocketHandle, int taille)
 //---------------------------------------------------------------------------------------
 /*
 Méthode 2 de receive : Caractère (ou chaine de caractères) de fin de séquence. Proposition : <EOM> (pour End of message) ?
-//Attention à ne pas afficher le <EOM>.
+//Attention à ne pas afficher le <EOM> -> deleteEOM
 */
 int SocketRcvEOM(int SocketHandle, char *rcv, int taille)
 {
-/*
-	int tailleMsgRecu = 0, nbBytes = 0, fin;
-	char buf[TAILLE_MSG*2];
-	char* MsgRecu = (char*)malloc(sizeof(char)*TAILLE_MSG);
-	int finDetectee = 0;
-
-	memset(buf,0 ,sizeof(buf));
-	printf("Réception d'un message...\n");
-	do
-	{
-		if((nbBytes = (recv(SocketHandle, buf, taille, 0))) != -1){
-			finDetectee = EndOfMessage(buf, nbBytes);
-			memcpy((char*)MsgRecu + tailleMsgRecu, buf, nbBytes);
-			tailleMsgRecu += nbBytes;
-		}
-		else
-		{
-			printf("\nErreur de réception du message !\n");
-			return 0;
-		}
-	}
-	while(!finDetectee && nbBytes != -1);
-
-	if(finDetectee){
-		if(deleteEOM(MsgRecu, nbBytes)){
-			printf("Message reçu : %s\n", MsgRecu);
-			return MsgRecu;
-		}
-	}
-	else
-		printf("Erreur : BAD MESSAGE FORMAT\n");
-		*/
-	
 	int nbBytes = 0;
 		
 	if((nbBytes = (recv(SocketHandle, rcv, TAILLE_MSG, 0))) != -1){
@@ -553,7 +468,7 @@ struct hostent* getLocalHost()
 {
 	struct hostent* CurrentHost;
 
-	if((CurrentHost = gethostbyname( getHostname() )) == 0){//récupère le hostname dans le fichier de config puis cherche les infos dessus
+	if((CurrentHost = gethostbyname( getProperty("hostname") )) == 0){//récupère le hostname dans le fichier de config puis cherche les infos dessus
 		printf("\nErreur d'acquisition d'infos sur le host %d\n", errno);
 		switch(errno){
 			case HOST_NOT_FOUND: printf("l'hote spécifié n'existe pas\n"); break;

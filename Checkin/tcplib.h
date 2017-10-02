@@ -51,14 +51,14 @@ void CreateCheckinConfig()
 	//printf("Hostname : %s\n", hostname);
 	strcpy(Content, "###CONFIG FILE###\nport_service = 26020\nport_admin = 26029\nhostname = ");
 	strcat(Content, hostname);
-	strcat(Content, "\nseparateur_CIMP = `\nseparateur_fichier = ;\nnb_threads = 5\n###EOF###\n");
+	strcat(Content, "\nseparateur_CIMP = `\nseparateur_fichier = ;\nnb_threads = 5\n###EOF###");
 	//printf("CONTENT : %s\n", Content); // <-- OK
 	
 	if((fp = fopen("checkin.config", "r")) == NULL){ // ! Check si le fichier n'existe pas, pas question d'écraser l'ancien
 		printf("checkin config n'existe pas, tentive de création...\n");
 		if((fp = fopen("checkin.config", "a+")) != NULL){
 			printf("création OK\n");
-			fwrite(Content, sizeof(char), strlen(Content)-1, fp);
+			fwrite(Content, sizeof(char), strlen(Content), fp);
 			printf("Initialisation du fichier OK\n");
 			fclose(fp);
 		}	
@@ -92,7 +92,7 @@ char* getProperty(char* propertyName)
 			//On lit une ligne du fichier config et on la segmente
 			if(fgets(line, 50, fp) != NULL){
 				line[strlen(line)-1] = '\0'; // <--- Pour enlever le '\n' mit par le fgets
-				//printf("LINE : %s\n", line);
+				//printf("\nLINE : %s\n", line);
 				sscanf(line, "%s = %s", property, value);
 
 			
@@ -114,7 +114,7 @@ char* getProperty(char* propertyName)
 				}
 			}
 			else{
-				printf("Erreur de lecture dans le fichier\n");
+				printf("Fin du fichier\nLINE : %s", line);
 				exit(1);
 			}
 		}

@@ -51,7 +51,7 @@ void CreateCheckinConfig()
 	//printf("Hostname : %s\n", hostname);
 	strcpy(Content, "###CONFIG FILE###\nport_service = 26020\nport_admin = 26029\nhostname = ");
 	strcat(Content, hostname);
-	strcat(Content, "\nseparateur_CIMP = `\nseparateur_fichier = ;\nnb_threads = 5\n###EOF###");
+	strcat(Content, "\nseparateur_CIMP = |\nseparateur_fichier = ;\nnb_threads = 5\n###EOF###");
 	//printf("CONTENT : %s\n", Content); // <-- OK
 	
 	if((fp = fopen("checkin.config", "r")) == NULL){ // ! Check si le fichier n'existe pas, pas question d'écraser l'ancien
@@ -149,12 +149,17 @@ int getRequest(char* request)
 {
 	char sep[5], *content;
 	int requestType, tailleSep = strlen(sep);
-	
+	printf("SEG1?\n");
 	strcpy(sep, getProperty("separateur_CIMP"));
+	printf("SEG2?\n");
 	//exemple de message de connexion : 1`aaa`bbb<EOM>
 	content = strtok(request, sep);
+	printf("SEG3?\n");
 	sscanf(content, "%d", &requestType); //Le premier paramètre étant le type de requête, on le converti en int.
+	printf("SEG4?\n");
 	strncpy(request, request + (tailleSep + 1), strlen(request) - (tailleSep + 1 )); //On recopie le contenu de la requête sans le type de requête et premier séparateur
+	printf("SEG5?\n");
+	return requestType;
 }
 
 //---------------------------------------------------------------------------------------
@@ -333,9 +338,20 @@ int SocketSend(int SocketHandle, char* msg)
 		return 0; //Pas d'exit ici, il faut clore toutes les sockets avant	
 	}
 	else{
-		//printf("\nEnvoi OK\n");
+		printf("\nEnvoi OK [%s]\n", msg);
 		return 1;
 	}
+}
+
+int SocketSendReqEOM(int SocketHandle, int requete, char *separator, char *msg)
+{
+	char new_msg[TAILLE_MSG];
+	sprintf(new_msg,"%d", requete);
+	//itoa(requete, new_msg, 10);
+	strcat(new_msg, separator);
+	strcat(new_msg, msg);
+	strcat(new_msg, "<EOM>");
+	SocketSend(SocketHandle, new_msg);
 }
 
 //---------------------------------------------------------------------------------------

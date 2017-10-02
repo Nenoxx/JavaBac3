@@ -1,9 +1,12 @@
+#include <pthread.h>
+
 #include "tcplib.h"
 
 int SocketEcoute;
 int SocketService;
+int pool = 5;
 
-void TraitementMessage(char*);
+void ThreadTraitementMsg(char*);
 
 int main()
 {
@@ -15,6 +18,13 @@ int main()
 
 	//Vérifie si le fichier de config existe, le crée sinon
 	CreateCheckinConfig();
+	
+	// Création du pool de threads
+	pthread_t *thread;
+	thread = malloc(pool * sizeof(int));
+	for(int i=0; i<pool; i++){
+		pthread_create((thread+i), NULL, 
+	}
 	
 	//1) Création de la socket
 	SocketEcoute = CreateSocket(SocketEcoute);
@@ -55,8 +65,7 @@ int main()
 		//7) Réception d'un message
 		retour = SocketRcvEOM(SocketService, rcv, TAILLE_MSG);
 		if(retour > 0){
-			//8) Traitement du message
-			TraitementMessage(rcv);
+			
 		}
 		else
 			break;
@@ -71,8 +80,12 @@ int main()
 /*
 Effectue un traitement en fonction du message recu
 */
-void TraitementMessage(char* msg)
+void ThreadTraitementMsg(char* msg)
 {
+	//récup socket service libre
+	//while(1)
+		//recup message
+		//traitement message
 	printf("SER> message recu: [%s], taille %d\n", msg, strlen(msg));
 		
 	if(strcmp(msg, "EOC") == 0 || strcmp(msg, "CLIENT INTERRUPTED") == 0){
@@ -81,5 +94,14 @@ void TraitementMessage(char* msg)
 	else{
 		SocketSend(SocketService, "SER> ACK Message bien reçu<EOM>\n");
 	}
+	
+	// connexion =1
+	// deconnexion =2 
+	// num vol
+	// num billet
+	// nbr passagers (vérifier si existe meme nombre billets à la suite que passagers)
+	// bagages
+	//
+	//
 }
 

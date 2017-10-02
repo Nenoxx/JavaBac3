@@ -51,7 +51,7 @@ void CreateCheckinConfig()
 		printf("checkin config n'existe pas, tentive de création...\n");
 		if((fp = fopen("checkin.config", "w")) != NULL){
 			printf("création OK\n");
-			fwrite(Content, sizeof(char), sizeof(Content)-1, fp);
+			fwrite(Content, sizeof(char), strlen(Content)-1, fp);
 			printf("Initialisation du fichier OK\n");
 			fclose(fp);
 		}	

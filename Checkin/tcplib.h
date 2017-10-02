@@ -39,16 +39,6 @@ Permet de séparer le numéro de type de requête du message en lui-même et de 
 OUTPUT : Le numéro correspondant au type de la requête
 INPUT : L'adresse du message entier, reçu par la socket.
 */
-int getRequest(char* request)
-{
-	char sep[] = getProperty("separateur_CIMP"), char* content;
-	int requestType, tailleSep = strlen(sep);
-
-	//exemple de message de connexion : 1`aaa`bbb<EOM>
-	content = strtok(request, sep);
-	sscanf(content, "%d", &requestType); //Le premier paramètre étant le type de requête, on le converti en int.
-	strncpy(request, request + (tailleSep + 1), strlen(request) - (tailleSep + 1 ); //On recopie le contenu de la requête sans le type de requête et premier séparateur
-}
 
 void CreateCheckinConfig()
 {
@@ -78,19 +68,6 @@ void CreateCheckinConfig()
 		printf("Le fichier config existe déjà\n");
 		fclose(fp);
 	}
-}
-
-//---------------------------------------------------------------------------------------
-/*
-Ouvre le fichier de config et cherche le port
-*/
-unsigned int getPort(char* nomPort)
-{
-	int port = atoi(getProperty(nomPort));
-	if(port > 0)
-		return port;
-	else
-		printf("Erreur : INVALID PORT NUMBER\n");
 }
 
 //---------------------------------------------------------------------------------------
@@ -149,6 +126,35 @@ char* getProperty(char* propertyName)
 		printf("Erreur lors de l'ouverture du fichier checkin.config\n");
 		exit(1);
 	}
+}
+
+//---------------------------------------------------------------------------------------
+/*
+Ouvre le fichier de config et cherche le port
+*/
+unsigned int getPort(char* nomPort)
+{
+	int port = atoi(getProperty(nomPort));
+	if(port > 0)
+		return port;
+	else
+		printf("Erreur : INVALID PORT NUMBER\n");
+}
+
+//---------------------------------------------------------------------------------------
+/*
+Sépare le contenu de la requête de son type et retourne les deux valeurs.
+*/
+int getRequest(char* request)
+{
+	char sep[5], *content;
+	int requestType, tailleSep = strlen(sep);
+	
+	strcpy(sep, getProperty("separateur_CIMP"));
+	//exemple de message de connexion : 1`aaa`bbb<EOM>
+	content = strtok(request, sep);
+	sscanf(content, "%d", &requestType); //Le premier paramètre étant le type de requête, on le converti en int.
+	strncpy(request, request + (tailleSep + 1), strlen(request) - (tailleSep + 1 )); //On recopie le contenu de la requête sans le type de requête et premier séparateur
 }
 
 //---------------------------------------------------------------------------------------

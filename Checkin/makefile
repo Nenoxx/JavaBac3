@@ -8,4 +8,4 @@ Client:	Client.cpp tcplib.h
 
 Serveur: Serveur.cpp tcplib.h
 	echo Creation de serveur...
-	g++ -w Serveur.cpp -o Serveur
+	g++ -w Serveur.cpp -lpthread -o Serveur

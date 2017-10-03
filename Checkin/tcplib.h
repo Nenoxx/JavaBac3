@@ -51,7 +51,7 @@ void CreateCheckinConfig()
 	//printf("Hostname : %s\n", hostname);
 	strcpy(Content, "###CONFIG FILE###\nport_service = 26020\nport_admin = 26029\nhostname = ");
 	strcat(Content, hostname);
-	strcat(Content, "\nseparateur_CIMP = |\nseparateur_fichier = ;\nnb_threads = 5\n###EOF###");
+	strcat(Content, "\nseparateur_CIMP = |\nseparateur_fichier = ;\nnb_threads = 5\nfichier_vols = vols.csv\n###EOF###");
 	//printf("CONTENT : %s\n", Content); // <-- OK
 	
 	if((fp = fopen("checkin.config", "r")) == NULL){ // ! Check si le fichier n'existe pas, pas question d'écraser l'ancien

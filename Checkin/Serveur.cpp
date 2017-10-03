@@ -10,8 +10,8 @@
 int SocketEcoute;
 int SocketService[20];
 int pool = 0;
-char *separator;
-char *separator2;
+char *sepReq;
+char *sepData;
 
 void* ThreadTraitementMsg(void* param);
 
@@ -29,8 +29,8 @@ int main()
 	//Vérifie si le fichier de config existe, le crée sinon
 	CreateCheckinConfig();
 	CreateLoginFile();
-	separator = getProperty("separateur_CIMP");
-	separator2 = getProperty("separateur_fichier");
+	sepReq = getProperty("separateur_CIMP");
+	sepData = getProperty("separateur_fichier");
 	
 	// Création du pool de threads
 	pool = atoi(getProperty("nb_threads")); // récup du fichier de config
@@ -88,12 +88,12 @@ int main()
 		
 		if(i == pool){
 			printf("SER> Plus de connexions disponibles\n");
-			SocketSendReqEOM(SocketService[i], NOK, separator, "Trop de clients connectés");
+			SocketSendReqEOM(SocketService[i], NOK, sepReq, "Trop de clients connectés");
 			CloseSocket(SocketService[i]);
 		}
 		else{
 			printf("SER> Socket num:%d libre\n", i);
-			SocketSendReqEOM(SocketService[i], OK, separator, "vous êtes connecté");
+			SocketSendReqEOM(SocketService[i], OK, sepReq, "vous êtes connecté");
 			//7) signaler un thread d'une nouvelle connexion
 			pthread_mutex_lock(&mutexConnexion);
 			connexionDispo++;
@@ -112,9 +112,14 @@ void* ThreadTraitementMsg(void * param)
 {
 	int Socket, i, taille=2000, connecte=0, requete;
 	int numTh = *((int*)(&param));
+	int loginOk, trouve, volEnCours;
+	char msg[TAILLE_MSG], numeroVol[10], fichierVol[100], numeroBillet[100];
 	printf("SER(th%d)> thread créé\n", numTh);
 	
 	while(1){
+	
+		loginOk = 0; //pas de client authentifié
+		volEnCours = 0;
 	
 		// Attente d'un client à traiter
 		pthread_mutex_lock(&mutexConnexion);
@@ -122,7 +127,6 @@ void* ThreadTraitementMsg(void * param)
 			pthread_cond_wait(&condConnexion, &mutexConnexion); // attend d'être réveillé
 		}
 		connexionDispo--; // le thread "prend" la connexion en charge
-		printf("SER(th%d)> débloqué\n", numTh);
 		i=0; // cherche socket libre
 		while(SocketService[i] == -1){
 			i++;
@@ -130,55 +134,114 @@ void* ThreadTraitementMsg(void * param)
 		Socket = SocketService[i]; // le thread travaille sur Socket
 		connecte = 1; // un client est connecté, on traite ses requetes
 		pthread_mutex_unlock(&mutexConnexion);
-	printf("SER(th%d)> avant boucle\n", numTh);
+		
+		printf("SER(th%d)> Nouveau client\n", numTh);
+		
 		while(connecte){
-			char msg[TAILLE_MSG]={0}; // à modifier
 			
-			printf("SER(th%d)> avant rcv\n", numTh);
-			SocketRcvEOM(Socket, msg, taille);
-			printf("SER(th%d)> apres rcv [%s]\n", numTh, msg);
-			requete = getRequest(msg);
-			printf("SER(th%d)> msg recu: [%s]\n", numTh, msg);
+			SocketRcvEOM(Socket, msg, taille);// recoit un message et enlève car de fin de chaine
+
+			requete = getRequest(msg); // récupère le type de requête
 		
 			switch(requete)
 			{	
-				case LOGIN_OFFICER:
+				case LOGIN_OFFICER: //[LOGIN_OFFICER|login;password]
 					{
-					//printf("Entrée login officer\n");
-					char login[30], password[30], tmp[30], *pLogin, *pPassword;
-					//Extraction des données du message reçu.
-					pLogin = strtok(msg, separator2);
-					pPassword = strtok(NULL, separator2);
-					strcpy(login, pLogin);
-					strcpy(password,pPassword);
-					//printf("LOGIN : %s\nPASSWORD : %s\n", login, password);
-					//Vérification dans le fichier
-					FetchRow(login, tmp, "login.csv");
-					//printf("Password fetched : %s\nPassword typed : [%s]\n", tmp, password);
-					if(strcmp(password, tmp) == 0)
-						SocketSendReqEOM(Socket, OK, separator, msg);
-					else
-						SocketSendReqEOM(Socket, NOK, separator, msg);
-					break;
+						//printf("Entrée login officer\n");
+						char login[30], password[30], tmp[30], *pLogin, *pPassword;
+						//Extraction des données du message reçu.
+						pLogin = strtok(msg, sepData);
+						pPassword = strtok(NULL, sepData);
+						strcpy(login, pLogin);
+						strcpy(password,pPassword);
+
+						//Vérification dans le fichier
+						trouve = FetchRow(login, tmp, "login.csv");
+
+						if(trouve){
+							SocketSendReqEOM(Socket, OK, sepReq, msg);
+							loginOk = 1;
+						}
+						else{
+							SocketSendReqEOM(Socket, NOK, sepReq, msg);
+							loginOk = 0;
+						}
+						break;
 					}
-				case LOGOUT_OFFICER:
-					SocketSend(Socket, "SER> OK déconnexion<EOM>\n");
-					CloseSocket(Socket);
-					connecte = 0;
-					break;
-				case NUM_VOL:
-					SocketSend(Socket, "SER> OK numvol<EOM>\n");
-					break;
-				case NUM_BILLET:
-					break;
-				case NBR_PASS:
-					break;
-				case BAGAGES:
-					break;
-				case CHECK_LUGGAGE:
-					break;
+				
+				case LOGOUT_OFFICER: //[LOGOUT_OFFICER|data]
+					{
+						if(loginOk){
+							SocketSendReqEOM(Socket, OK, sepReq, "");
+							CloseSocket(Socket);
+							connecte = 0;
+							loginOk = 0;	
+						}
+						else
+							printf("SER(th%d)> Erreur: recu logout sans login\n", numTh);	
+						break;
+					}
+				
+				case NUM_VOL: //[NUM_VOL|numeroVol]
+					{
+						// chercher dans fichier vols.csv pour numeroVol
+						trouve = FetchRow(msg, numeroVol, getProperty("fichier_vols"));
+						if(trouve)
+						{
+							SocketSendReqEOM(Socket, OK, sepReq, numeroVol);
+							volEnCours = atoi(numeroVol);
+							strcpy(fichierVol, "VOL");
+							strcat(fichierVol, numeroVol);
+							strcat(fichierVol, ".csv");
+							fichierVol[strlen(numeroVol)+7] = '\0';
+						}
+						else
+						{
+							SocketSendReqEOM(Socket, NOK, sepReq, numeroVol);
+							volEnCours = 0;
+						}
+						break;
+					}
+				
+				case NUM_BILLET: //[NUM_BILLET|numerodebillet(=numvol+numbillet);nbAccompagnants]
+					{
+						if(volEnCours != 0)
+						{
+							trouve = FetchRow(msg, numeroBillet, fichierVol);
+							if(trouve)
+							{
+								SocketSendReqEOM(Socket, OK, sepReq, numeroBillet);
+							}
+							else // billet n'existe pas
+							{
+								SocketSendReqEOM(Socket, NOK, sepReq, numeroBillet);
+							}
+						}
+						else
+						{
+							SocketSendReqEOM(Socket, NOK, sepReq, "");
+						}
+						break;
+					}
+					
+				case NBR_PASS: //[NBR_PASS|nbrpassagers]
+					{
+						break;
+					}
+					
+				case BAGAGES: // a quoi ca sert ?
+					{
+						break;
+					}
+					
+				case CHECK_LUGGAGE: //[CHECK_LUGGAGE|poid1;poids2;...] !! manque infos si valise ou pas
+					{
+						
+						break;
+					}
+					
 				default: 
-					SocketSend(Socket, "SER> Requete inconnue<EOM>\n");
+					SocketSendReqEOM(Socket, EOC, sepReq, "requete inconnue");
 			}
 		}// boucle tant que connecté
 		

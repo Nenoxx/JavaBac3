@@ -11,6 +11,7 @@ int SocketEcoute;
 int SocketService[20];
 int pool = 0;
 char *separator;
+char *separator2;
 
 void* ThreadTraitementMsg(void* param);
 
@@ -29,6 +30,7 @@ int main()
 	CreateCheckinConfig();
 	CreateLoginFile();
 	separator = getProperty("separateur_CIMP");
+	separator2 = getProperty("separateur_fichier");
 	
 	// Création du pool de threads
 	pool = atoi(getProperty("nb_threads")); // récup du fichier de config
@@ -142,16 +144,21 @@ void* ThreadTraitementMsg(void * param)
 			{	
 				case LOGIN_OFFICER:
 					{
-					char login[30], password[30], tmp[30];
+					//printf("Entrée login officer\n");
+					char login[30], password[30], tmp[30], *pLogin, *pPassword;
 					//Extraction des données du message reçu.
-					strcpy(login, strtok(msg, separator));
-					strcpy(password,strtok(NULL, separator));
+					pLogin = strtok(msg, separator2);
+					pPassword = strtok(NULL, separator2);
+					strcpy(login, pLogin);
+					strcpy(password,pPassword);
+					//printf("LOGIN : %s\nPASSWORD : %s\n", login, password);
 					//Vérification dans le fichier
 					FetchRow(login, tmp, "login.csv");
+					//printf("Password fetched : %s\nPassword typed : [%s]\n", tmp, password);
 					if(strcmp(password, tmp) == 0)
-						SocketSend(Socket, "SER> OK connexion<EOM>\n");
+						SocketSendReqEOM(Socket, OK, separator, msg);
 					else
-						SocketSend(Socket, "SER> NON connexion<EOM>\n");
+						SocketSendReqEOM(Socket, NOK, separator, msg);
 					break;
 					}
 				case LOGOUT_OFFICER:

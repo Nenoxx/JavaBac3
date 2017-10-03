@@ -71,11 +71,14 @@ void FetchRow(char* ID, char* pwd, char* file)
 				stop = 1;
 			}
 			else{
-				//printf("Après fgets : %s\n", row);
+				row[strlen(row)-1] = '\0';
+				//printf("Après fgets : [%s]\n", row);
 				property = strtok(row, sep); // On récupère juste la toute première valeur
+				//printf("property : [%s]\nID : [%s]\n", property, ID);
 				password = strtok(NULL, sep);
+				//printf("value : [%s]\n", password);
 				if(strcmp(property, ID) == 0){
-					//printf("property trouvé\n");			
+					printf("property trouvé\n");			
 					strcpy(pwd, password);
 				}
 			}

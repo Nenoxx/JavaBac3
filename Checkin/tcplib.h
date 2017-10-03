@@ -149,16 +149,13 @@ int getRequest(char* request)
 {
 	char sep[5], *content;
 	int requestType, tailleSep = strlen(sep);
-	printf("SEG1?\n");
 	strcpy(sep, getProperty("separateur_CIMP"));
-	printf("SEG2?\n");
 	//exemple de message de connexion : 1`aaa`bbb<EOM>
+	printf("[%s]\n", request);
 	content = strtok(request, sep);
-	printf("SEG3?\n");
 	sscanf(content, "%d", &requestType); //Le premier paramètre étant le type de requête, on le converti en int.
-	printf("SEG4?\n");
-	strncpy(request, request + (tailleSep + 1), strlen(request) - (tailleSep + 1 )); //On recopie le contenu de la requête sans le type de requête et premier séparateur
-	printf("SEG5?\n");
+	content = strtok(NULL, sep);
+	strcpy(request, content);
 	return requestType;
 }
 

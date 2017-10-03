@@ -57,7 +57,7 @@ int CreateTicketFile()
 	}
 }
 
-void FetchRow(char* ID, char* pwd, char* file)
+int FetchRow(char* cle, char* valeur, char* file)
 {
 	FILE* fp = NULL;
 	int stop = 0;
@@ -74,12 +74,14 @@ void FetchRow(char* ID, char* pwd, char* file)
 				row[strlen(row)-1] = '\0';
 				//printf("Après fgets : [%s]\n", row);
 				property = strtok(row, sep); // On récupère juste la toute première valeur
-				//printf("property : [%s]\nID : [%s]\n", property, ID);
+				//printf("property : [%s]\ncle : [%s]\n", property, cle);
 				password = strtok(NULL, sep);
 				//printf("value : [%s]\n", password);
-				if(strcmp(property, ID) == 0){
+				if(strcmp(property, cle) == 0){
 					printf("property trouvé\n");			
-					strcpy(pwd, password);
+					strcpy(valeur, password);
+					fclose(fp);
+					return 1;
 				}
 			}
 		}
@@ -91,6 +93,8 @@ void FetchRow(char* ID, char* pwd, char* file)
 		printf("Impossible d'ouvrir le fichier spécifié\n");
 		exit(1);
 	}
+	fclose(fp);
+	return 0;
 }
 
 

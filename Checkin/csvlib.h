@@ -97,7 +97,6 @@ int FetchRow(char* cle, char* valeur, char* file)
 	return 0;
 }
 
-<<<<<<< HEAD
 int EcrireCsv(char *file, char *cle, char*valeur, char *separator)
 {
 	FILE* fp = NULL;
@@ -118,7 +117,6 @@ int EcrireCsv(char *file, char *cle, char*valeur, char *separator)
 	return 1;
 }
 
-=======
 int CreateLuggageLog(char* IDLuggage, char* TypeLuggage)
 {
 
@@ -145,9 +143,6 @@ int CreateLuggageLog(char* IDLuggage, char* TypeLuggage)
 		return 0;
 	}
 }
-
-
->>>>>>> e43d86e4f6cfed7d66d6a6a30e81b309f246b488
 
 
 #endif

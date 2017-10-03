@@ -3,112 +3,6 @@
 
 #include "tcplib.h"
 
-/*Liste permettant de manipuler des chaines de caractères*/
-typedef struct RowArray{
-	char* rowElem;
-	struct RowArray* psuiv;
-}RowArray;
-
-typedef struct RowList{
-	RowArray *first;
-	RowArray *list;
-}RowList;
-
-/*Fonctions permettant de gérer une liste de Row : */
-
-/*Fonction permettant d'initialiser une liste NULL passée en paramètre.*/
-RowList* ListInit(RowList* rlist)
-{
-	if(rlist == NULL){
-		rlist = (RowList*)malloc(sizeof(RowList));
-		if(rlist){
-
-			rlist->first = NULL;
-			rlist->list = NULL;
-
-		}
-		else{
-			printf("Erreur lors de la création de la liste : Mémoire insuffisante\n");
-			exit(1);
-		}
-	}
-	return rlist;
-}
-
-void ListInsert(RowList* rlist, RowArray* elem)
-{
-	printf("\nAdresse elem 1 : %p", &elem);
-	if(rlist != NULL){
-		printf("\nAdresse elem 2 : %p", &elem);
-		if(rlist->first == NULL){
-			printf("\nAdresse elem 3 : %p", &elem);
-			rlist->first = elem;
-			printf("\n\n%p-%s-%p\n", &elem, elem->rowElem, rlist->first->psuiv);
-			rlist->first->psuiv = NULL;
-			
-		}
-		else{
-			printf("3\n");
-			//Insertion en fin de liste
-			RowArray *tmp = rlist->first;
-			while(tmp->psuiv != NULL)
-				tmp = tmp->psuiv;
-			tmp->psuiv = elem;
-			elem->psuiv = NULL;
-		}
-	}
-	else
-		printf("Liste nulle, gros naze\n");
-}
-
-//Supprime l'élément suivant de la position où on se trouve dans la liste (pas de pointeur vers l'arrière)
-void ListRemove(RowList *rlist)
-{
-	if(rlist != NULL){
-		if(rlist->list != NULL){ // deprecated, à changer
-			RowArray *CurrentList = rlist->list;
-			RowArray *NextItem = CurrentList->psuiv;
-			CurrentList->psuiv = NextItem->psuiv;
-			free(NextItem);
-		}
-		else{ //L'élément à supprimer est simplement le pointeur first
-			if(rlist->first != NULL){
-				free(rlist->first);
-				rlist->first = NULL;
-			}
-			else
-				printf("Rien à supprimer...\n");
-		}
-	}
-}
-
-//Permet de compter le nombre d'éléments..
-int ListCount(RowList *rlist)
-{
-	if(rlist != NULL)
-	{
-		int i = 0;
-		
-		while(rlist->list->psuiv != NULL){
-			rlist->list = rlist->list->psuiv;
-			i++;
-		}
-		return i;
-	}
-}
-
-RowArray* ElemInit(RowArray *elem, char* value)
-{
-	if(elem == NULL && value != NULL){
-		elem = (RowArray*)malloc(sizeof(RowArray));
-		printf("Adresse elem après INIT : %p\n", &elem);
-		elem->rowElem = (char*)malloc(strlen(value));
-		strcpy(elem->rowElem, value);
-		elem->psuiv = NULL;
-		return elem;
-	}
-}
-
 int CreateLoginFile()
 {
 	FILE* fp = NULL;
@@ -163,14 +57,12 @@ int CreateTicketFile()
 	}
 }
 
-RowList* FetchRows(char* ID, char* file)
+void FetchRow(char* ID, char* pwd, char* file)
 {
 	FILE* fp = NULL;
 	int stop = 0;
-	char row[100], *property, sep[5];
-	RowList* rlist = NULL;
+	char row[100], *property, *password, sep[5];
 	strcpy(sep, getProperty("separateur_fichier"));
-	rlist = ListInit(rlist);
 
 	if((fp = fopen(file, "r")) != NULL){
 		do{
@@ -179,29 +71,18 @@ RowList* FetchRows(char* ID, char* file)
 				stop = 1;
 			}
 			else{
+				//printf("Après fgets : %s\n", row);
 				property = strtok(row, sep); // On récupère juste la toute première valeur
-				//printf("\n\nID : [%s] -- property : [%s]\n\n", ID, property);
+				password = strtok(NULL, sep);
 				if(strcmp(property, ID) == 0){
-					//printf("coucou\n");
-					RowArray *elem = NULL;
-					//elem = ElemInit(elem, row);
-					elem = (RowArray*)malloc(sizeof(RowArray));
-					elem->rowElem = (char*)malloc(strlen(row));
-					strcpy(elem->rowElem, row);
-					elem->psuiv = NULL;
-					printf("\nrow = %s\nAdresse elem : %p\n", row, &elem);
-					ListInsert(rlist, elem);
+					//printf("property trouvé\n");			
+					strcpy(pwd, password);
 				}
 			}
 		}
 		while(!feof(fp) && row != NULL && stop != 1);
 		
 		//On sort du while -> fin de fichier (en tout cas, j'espère)
-		if(ListCount(rlist) != 0) return rlist;
-		else{ 
-			printf("Aucune ligne n'a été sélectionnée\n");
-			return NULL;
-		}
 	}
 	else{
 		printf("Impossible d'ouvrir le fichier spécifié\n");

@@ -60,7 +60,8 @@ int main()
 	}
 	printf("CLI> Connecté au serveur\n");
 	
-	int cpt = 0;	
+	int cpt = 0;
+	printf("#### APPLICATION CHECK-IN ####\n\n\n");		
 	do{
 		printf("Entrez votre login:");
 		scanf("%s", login);
@@ -110,63 +111,6 @@ int main()
 				break;
 		}
 	//boucle fin
-		
-		
-		
-		
-		
-		
-		
-		
-		while(deco == 0)
-		{
-		
-		printf("#### APPLICATION CHECK-IN ####\n\n\n");
-		/*do{
-			//init
-			RowList *rlist = NULL;
-			strcpy(value, "");
-			strcpy(loginpwd, "");
-			//get login
-			printf("\nLOGIN : ");
-			fgets(value, 30, stdin);
-			value[strlen(value)-1] = '\0';
-			strcpy(loginpwd, value);
-			rlist = FetchRows(value, "login.csv"); //tant qu'on a encore le login dans value.. Oui, c'est dégueulasse comme code.
-							       //!!! Le login est UNIQUE, il ne doit y avoir qu'une seule valeur dans rlist !
-			strcat(loginpwd, ";");
-			printf("MOT DE PASSE : ");
-			fgets(value, 30, stdin);
-			value[strlen(value)-1] = '\0';
-			strcat(loginpwd, value);
-			printf("row? %s\n", rlist->first->rowElem);
-			//verification
-			if(strcmp(rlist->first->rowElem, loginpwd) != 0)
-				printf("Login ou mot de passe erronné..\n\n");
-			else{
-				printf("Login OK\n\n");
-				loginok = 1;
-			}
-		}
-		while(loginok == 0);*/
-	
-		
-		
-		//5) Envoi d'un message de connexion
-		strcpy(msg, "Hello, demande de connexion");
-		msg[strcspn(msg, "\n")] = '\0'; //On remplace le \n du fgets par un \0
-		strcat(msg, "<EOM>");
-		SocketSend(SocketClient, msg);
-		printf("Message de connexion envoyé: [%s]\n", msg);
-	
-		//6) Réception réponse
-		retour = SocketRcvEOM(SocketClient, rcv, TAILLE_MSG);
-		if(retour > 0){
-			printf("Réponse du serveur: [%s]\n", rcv);
-		}
-		else
-			printf("Erreur de receive\n");
-	
 			
 		while(deco == 0){
 			char r;
@@ -213,7 +157,6 @@ int main()
 			default: break;
 			}
 		}
-	}
 	//5) Envoi d'un message
 	//6) Réception de la réponse
 	//7)

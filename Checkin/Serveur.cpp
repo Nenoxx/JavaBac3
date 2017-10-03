@@ -141,8 +141,19 @@ void* ThreadTraitementMsg(void * param)
 			switch(requete)
 			{	
 				case LOGIN_OFFICER:
-					SocketSend(Socket, "SER> OK connexion<EOM>\n");
+					{
+					char login[30], password[30], tmp[30];
+					//Extraction des données du message reçu.
+					strcpy(login, strtok(msg, separator));
+					strcpy(password,strtok(NULL, separator));
+					//Vérification dans le fichier
+					FetchRow(login, tmp, "login.csv");
+					if(strcmp(password, tmp) == 0)
+						SocketSend(Socket, "SER> OK connexion<EOM>\n");
+					else
+						SocketSend(Socket, "SER> NON connexion<EOM>\n");
 					break;
+					}
 				case LOGOUT_OFFICER:
 					SocketSend(Socket, "SER> OK déconnexion<EOM>\n");
 					CloseSocket(Socket);

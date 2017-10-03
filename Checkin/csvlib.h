@@ -31,18 +31,21 @@ RowList* ListInit(RowList* rlist)
 			printf("Erreur lors de la création de la liste : Mémoire insuffisante\n");
 			exit(1);
 		}
-	}	
+	}
+	return rlist;
 }
 
 void ListInsert(RowList* rlist, RowArray* elem)
 {
+	printf("\nAdresse elem 1 : %p", &elem);
 	if(rlist != NULL){
-		printf("1\n");
+		printf("\nAdresse elem 2 : %p", &elem);
 		if(rlist->first == NULL){
-			printf("2\n");
+			printf("\nAdresse elem 3 : %p", &elem);
 			rlist->first = elem;
-			printf("2.5\n");
-			elem->psuiv = NULL;
+			printf("\n\n%p-%s-%p\n", &elem, elem->rowElem, rlist->first->psuiv);
+			rlist->first->psuiv = NULL;
+			
 		}
 		else{
 			printf("3\n");
@@ -98,6 +101,7 @@ RowArray* ElemInit(RowArray *elem, char* value)
 {
 	if(elem == NULL && value != NULL){
 		elem = (RowArray*)malloc(sizeof(RowArray));
+		printf("Adresse elem après INIT : %p\n", &elem);
 		elem->rowElem = (char*)malloc(strlen(value));
 		strcpy(elem->rowElem, value);
 		elem->psuiv = NULL;
@@ -180,8 +184,12 @@ RowList* FetchRows(char* ID, char* file)
 				if(strcmp(property, ID) == 0){
 					//printf("coucou\n");
 					RowArray *elem = NULL;
-					elem = ElemInit(elem, row);
-					printf("row = %s\n", row);
+					//elem = ElemInit(elem, row);
+					elem = (RowArray*)malloc(sizeof(RowArray));
+					elem->rowElem = (char*)malloc(strlen(row));
+					strcpy(elem->rowElem, row);
+					elem->psuiv = NULL;
+					printf("\nrow = %s\nAdresse elem : %p\n", row, &elem);
 					ListInsert(rlist, elem);
 				}
 			}

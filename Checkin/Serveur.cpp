@@ -113,7 +113,7 @@ void* ThreadTraitementMsg(void * param)
 	int Socket, i, taille=2000, connecte=0, requete;
 	int numTh = *((int*)(&param));
 	int loginOk, trouve, volEnCours;
-	char msg[TAILLE_MSG], numeroVol[10];
+	char msg[TAILLE_MSG], numeroVol[10], fichierVol[100], numeroBillet[100];
 	printf("SER(th%d)> thread créé\n", numTh);
 	
 	while(1){
@@ -190,6 +190,10 @@ void* ThreadTraitementMsg(void * param)
 						{
 							SocketSendReqEOM(Socket, OK, sepReq, numeroVol);
 							volEnCours = atoi(numeroVol);
+							strcpy(fichierVol, "VOL");
+							strcat(fichierVol, numeroVol);
+							strcat(fichierVol, ".csv");
+							fichierVol[strlen(numeroVol)+7] = '\0';
 						}
 						else
 						{
@@ -201,13 +205,22 @@ void* ThreadTraitementMsg(void * param)
 				
 				case NUM_BILLET: //[NUM_BILLET|numerodebillet(=numvol+numbillet);nbAccompagnants]
 					{
-						//si vol != 0
-							// chercher dans fichier VOL[numeroVol].csv pour numeroBillet
-							// si trouvé -> [OK|numerodebillet]
-							
-							// sinon -> [NOK|numerodebillet]
-							
-						//sinon -> [NOK|"pas de vol sélectionné"]
+						if(volEnCours != 0)
+						{
+							trouve = FetchRow(msg, numeroBillet, fichierVol);
+							if(trouve)
+							{
+								SocketSendReqEOM(Socket, OK, sepReq, numeroBillet);
+							}
+							else // billet n'existe pas
+							{
+								SocketSendReqEOM(Socket, NOK, sepReq, numeroBillet);
+							}
+						}
+						else
+						{
+							SocketSendReqEOM(Socket, NOK, sepReq, "");
+						}
 						break;
 					}
 					
@@ -216,12 +229,12 @@ void* ThreadTraitementMsg(void * param)
 						break;
 					}
 					
-				case BAGAGES: //
+				case BAGAGES: // a quoi ca sert ?
 					{
 						break;
 					}
 					
-				case CHECK_LUGGAGE: //[CHECK_LUGGAGE|poid1;poids2;...]
+				case CHECK_LUGGAGE: //[CHECK_LUGGAGE|poid1;poids2;...] !! manque infos si valise ou pas
 					{
 						
 						break;

@@ -93,6 +93,34 @@ void FetchRow(char* ID, char* pwd, char* file)
 	}
 }
 
+int CreateLuggageLog(char* IDLuggage, char* TypeLuggage)
+{
+
+	FILE *fp;
+	int taille = strlen(IDLuggage) + 10;
+	char nomFichier[taille], *separator;
+
+	separator = getProperty("separateur_fichier");
+	strcpy(nomFichier, IDLuggage);
+	strcat(nomFichier, "_lug.csv");
+
+	if((fp = fopen(nomFichier, "w")) != NULL){
+		int tailleRow = (strlen(IDLuggage) + strlen(TypeLuggage) + strlen(separator) + 1);
+		char row[tailleRow];
+		strcpy(row, IDLuggage);
+		strcat(row, separator);
+		strcat(row, TypeLuggage);
+		fwrite(row, sizeof(char), tailleRow, fp);
+		printf("\nCréation du log %s OK\n", nomFichier);
+		return 1;
+	}
+	else{
+		printf("\nErreur de création de fichier log\n");
+		return 0;
+	}
+}
+
+
 
 
 #endif

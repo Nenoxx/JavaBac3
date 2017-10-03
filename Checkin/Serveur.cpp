@@ -110,16 +110,19 @@ Thread de traitement de requêtes
 */
 void* ThreadTraitementMsg(void * param)
 {
-	int Socket, i, taille=2000, connecte=0, requete;
+	int Socket, i, connecte=0, requete, payementOk;
 	int numTh = *((int*)(&param));
-	int loginOk, trouve, volEnCours;
-	char msg[TAILLE_MSG], numeroVol[10], fichierVol[100], numeroBillet[100];
+	int loginOk, trouve, volEnCours, nbrPass, cpt, total;
+	char msg[TAILLE_MSG], numeroVol[10], fichierVol[100], numeroBillet[100], fichierVolVal[100];
+	char poids[10], *p, *valise;
 	printf("SER(th%d)> thread créé\n", numTh);
 	
 	while(1){
 	
 		loginOk = 0; //pas de client authentifié
 		volEnCours = 0;
+		nbrPass = 0;
+		payementOk = 0;
 	
 		// Attente d'un client à traiter
 		pthread_mutex_lock(&mutexConnexion);
@@ -139,7 +142,7 @@ void* ThreadTraitementMsg(void * param)
 		
 		while(connecte){
 			
-			SocketRcvEOM(Socket, msg, taille);// recoit un message et enlève car de fin de chaine
+			SocketRcvEOM(Socket, msg, TAILLE_MSG);// recoit un message et enlève car de fin de chaine
 
 			requete = getRequest(msg); // récupère le type de requête
 		
@@ -192,8 +195,11 @@ void* ThreadTraitementMsg(void * param)
 							volEnCours = atoi(numeroVol);
 							strcpy(fichierVol, "VOL");
 							strcat(fichierVol, numeroVol);
+							strcpy(fichierVolVal, fichierVol);
+							strcat(fichierVolVal, "LUG.csv");
 							strcat(fichierVol, ".csv");
 							fichierVol[strlen(numeroVol)+7] = '\0';
+							fichierVolVal[strlen(numeroVol)+10] = '\0';
 						}
 						else
 						{
@@ -226,17 +232,82 @@ void* ThreadTraitementMsg(void * param)
 					
 				case NBR_PASS: //[NBR_PASS|nbrpassagers]
 					{
+						nbrPass = atoi(msg);
+						if(nbrPass > 0)
+						{
+							SocketSendReqEOM(Socket, OK, sepReq, "");
+						}
+						else
+						{
+							SocketSendReqEOM(Socket, NOK, sepReq, "");
+						}
 						break;
 					}
 					
-				case BAGAGES: // a quoi ca sert ?
-					{
-						break;
-					}
 					
-				case CHECK_LUGGAGE: //[CHECK_LUGGAGE|poid1;poids2;...] !! manque infos si valise ou pas
+				case CHECK_LUGGAGE: //[CHECK_LUGGAGE|poid1;poids2;...]
 					{
+						total = 0;
+						cpt = 0;
+						p = strtok(msg, sepData);
+						total += atoi(p);
+						cpt ++;
+						while(p != NULL)
+						{
+							p = strtok(NULL, sepData);
+							total += atoi(p);
+							cpt++;
+						}
 						
+						if((total - 20*cpt) > 0) 
+						// surpoids (prix supplément et valeur max poids à ajouter dans config)
+						{
+							char rep[TAILLE_MSG];
+							int surpoids;
+							surpoids = total - 20*cpt;
+							sprintf(rep, "%d", surpoids);
+							strcat(rep, sepData);
+							sprintf(&rep[strlen(rep)], "%d", surpoids*3); // 3€ par kg suppl
+							SocketSendReqEOM(Socket, OK, sepReq, rep); //[OK|poidsexcessif;prixapayer]
+							
+							SocketRcvEOM(Socket, msg, TAILLE_MSG);
+							requete = getRequest(msg); // récupère le type de requête
+							if(requete == OK){
+								payementOk = 1;
+							}
+							else{
+								payementOk = 0;
+							}
+							
+						}
+						else //pas de surpoids
+						{
+							SocketSendReqEOM(Socket, OK, sepReq, "0");
+							payementOk = 1; // pas de surpoids donc pas de payement de supplément
+						}
+						break;
+					}
+										
+				case BAGAGES: // [BAGAGES|valise;autre;...]
+					{
+						if(payementOk)
+						{
+							SocketSendReqEOM(Socket, OK, sepReq, "");
+							
+							// découpe du message et pour chaque élément écrire dans le fichier du vol
+							valise = strtok(msg, sepData);
+							EcrireCsv(fichierVolVal, numeroBillet, valise, sepData); // ajoute chaque valise
+							
+							while(valise != NULL)
+							{
+								valise = strtok(NULL, sepData);
+								EcrireCsv(fichierVolVal, numeroBillet, valise, sepData);
+							}
+						}
+						else
+						{
+							SocketSendReqEOM(Socket, NOK, sepReq, "");
+						}
 						break;
 					}
 					

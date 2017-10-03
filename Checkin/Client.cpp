@@ -125,7 +125,7 @@ int main()
 				switch(r){
 				case '1':
 					{ //mettre le bloc (les crochets) sinon le compilateur râle.
-					char billet[20], sep[5], msg[TAILLE_MSG], rcv[TAILLE_MSG];
+					char billet[20], sep[5], msg[TAILLE_MSG] = "", rcv[TAILLE_MSG], tmp[10], c;
 					int nbPersonnes = 0, prix_exces = 0;
 					float poids = 0, poids_tot = 0;
 				
@@ -139,18 +139,36 @@ int main()
 						printf("\nPoids de la valise num. %d : ", i);
 						scanf("%f", &poids);
 						poids_tot += poids;
-						if(poids > 23.0)
-							prix_exces += 15;
+						sprintf(tmp, "%f", poids);
+						strcat(msg, tmp);
+						if(i != nbPersonnes - 1) strcat(msg, separator2); //pour ne pas mettre un séparateur en fin de chaine qui foutra la merde dans la lecture de la requête.
 					}
-					printf("\n\nPoids total : %f\nSupplément à payer : %d", poids_tot, prix_exces);
-					printf("\nVERIFICATION DES VALISES, VEUILLEZ PATIENTER... ");
-					strcpy(msg, "?"); //Changer ! C'est le numéro de la requête !
-					strcat(msg, sep);
-					strcat(msg, "CHECK_LUGGAGE");
-					SocketSend(SocketClient, msg);
-					SocketRcvEOM(SocketClient, rcv, TAILLE_MSG); // VALISE_ACK ou VALISE_NACK
-					if(strcmp(rcv, "VALISE_ACK") == 0) printf("VALISE OK ! BON VOYAGE !\n\n\n");
-					else printf("VALISE NON OK !");
+					printf("Verification des valises, veuillez patienter SVP...\n");
+					SocketSendReqEOM(SocketClient, CHECK_LUGGAGE, separator, msg);	
+					SocketRcvEOM(SocketClient, rcv, TAILLE_MSG);
+					req = getRequest(rcv);
+					if(req == 10){ //OK
+						char *pPoidsEx, *pPrixEx;
+						float poids_ex;
+						pPoidsEx = strtok(rcv, separator2);
+						sscanf(pPoidsEx, "%f", poids_ex);
+						if(poids_ex > 0){ //Cas ou il y a un supplément à payer
+							pPrixEx = strtok(NULL, separator2);
+							sscanf(pPrixEx, "%d", prix_exces);
+							printf("\n-----------\nPoids total des baggages : %f\nPoids excessif : %f\nCout supplémentaire : %d euros\n-----------\n", poids_tot, poids_ex, prix_exces);
+						}
+						
+						do
+						{	printf("Paiement effectué? (o/n) : ");					
+							c = getchar();
+						}
+						while(c != 'o' && c!= 'n');
+						
+						if(c == 'o'){
+							//Création du log temporaire
+							CreateLuggageLog(billet, "Valise");
+						}
+					}
 					break;
 					}
 				case '2': deco = 1; break;
@@ -162,7 +180,6 @@ int main()
 	//5) Envoi d'un message
 	//6) Réception de la réponse
 	//7)
-	//lol
 		
 	CloseSocket(SocketClient);
 	return 0;

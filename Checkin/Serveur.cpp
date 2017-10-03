@@ -4,12 +4,13 @@
 #include <pthread.h>
 
 #include "tcplib.h"
-//#include "csvlib.h"
+#include "csvlib.h"
 #include "cimp.h"
 
 int SocketEcoute;
 int SocketService[20];
 int pool = 0;
+char *separator;
 
 void* ThreadTraitementMsg(void* param);
 
@@ -26,6 +27,8 @@ int main()
 
 	//Vérifie si le fichier de config existe, le crée sinon
 	CreateCheckinConfig();
+	CreateLoginFile();
+	separator = getProperty("separateur_CIMP");
 	
 	// Création du pool de threads
 	pool = atoi(getProperty("nb_threads")); // récup du fichier de config
@@ -83,11 +86,12 @@ int main()
 		
 		if(i == pool){
 			printf("SER> Plus de connexions disponibles\n");
-			SocketSend(SocketService[i], "SER> OK connexion<EOM>\n");
+			SocketSendReqEOM(SocketService[i], NOK, separator, "Trop de clients connectés");
 			CloseSocket(SocketService[i]);
 		}
 		else{
 			printf("SER> Socket num:%d libre\n", i);
+			SocketSendReqEOM(SocketService[i], OK, separator, "vous êtes connecté");
 			//7) signaler un thread d'une nouvelle connexion
 			pthread_mutex_lock(&mutexConnexion);
 			connexionDispo++;
@@ -116,7 +120,7 @@ void* ThreadTraitementMsg(void * param)
 			pthread_cond_wait(&condConnexion, &mutexConnexion); // attend d'être réveillé
 		}
 		connexionDispo--; // le thread "prend" la connexion en charge
-	
+		printf("SER(th%d)> débloqué\n", numTh);
 		i=0; // cherche socket libre
 		while(SocketService[i] == -1){
 			i++;
@@ -124,19 +128,22 @@ void* ThreadTraitementMsg(void * param)
 		Socket = SocketService[i]; // le thread travaille sur Socket
 		connecte = 1; // un client est connecté, on traite ses requetes
 		pthread_mutex_unlock(&mutexConnexion);
-	
+	printf("SER(th%d)> avant boucle\n", numTh);
 		while(connecte){
-			char msg[2000]={0}; // à modifier
+			char msg[TAILLE_MSG]={0}; // à modifier
+			
+			printf("SER(th%d)> avant rcv\n", numTh);
 			SocketRcvEOM(Socket, msg, taille);
+			printf("SER(th%d)> apres rcv [%s]\n", numTh, msg);
 			requete = getRequest(msg);
 			printf("SER(th%d)> msg recu: [%s]\n", numTh, msg);
 		
 			switch(requete)
 			{	
-				case CONNEXION:
+				case LOGIN_OFFICER:
 					SocketSend(Socket, "SER> OK connexion<EOM>\n");
 					break;
-				case DECONNEXION:
+				case LOGOUT_OFFICER:
 					SocketSend(Socket, "SER> OK déconnexion<EOM>\n");
 					CloseSocket(Socket);
 					connecte = 0;

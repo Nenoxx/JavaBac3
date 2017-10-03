@@ -97,6 +97,26 @@ int FetchRow(char* cle, char* valeur, char* file)
 	return 0;
 }
 
+int EcrireCsv(char *file, char *cle, char*valeur, char *separator)
+{
+	FILE* fp = NULL;
+	char ligne [1000];
+	
+	if((fp = fopen(file, "a")) != NULL){
+		fputs(cle, fp);
+		fputs(separator, fp);
+		fputs(valeur, fp);
+		fputs("\n", fp);
+	}
+	else{
+		printf("Impossible d'ouvrir le fichier spécifié\n");
+		fclose(fp);
+		return 0;
+	}
+	fclose(fp);
+	return 1;
+}
+
 
 
 #endif

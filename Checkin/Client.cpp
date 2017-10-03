@@ -162,6 +162,7 @@ int main()
 	//5) Envoi d'un message
 	//6) Réception de la réponse
 	//7)
+	//lol
 		
 	CloseSocket(SocketClient);
 	return 0;

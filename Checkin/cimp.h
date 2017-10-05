@@ -5,6 +5,7 @@
 #define NBR_PASS 5
 #define BAGAGES 6
 #define CHECK_LUGGAGE 7
+#define PAIEMENT 8
 
 #define OK 10
 #define NOK 11

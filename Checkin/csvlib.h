@@ -3,11 +3,10 @@
 
 #include "tcplib.h"
 
-int CreateLoginFile()
+int CreateLoginFile(char *sep)
 {
 	FILE* fp = NULL;
-	char Content[1024] = "", sep[5];
-	strcpy(sep, getProperty("separateur_fichier"));
+	char Content[1024] = "";
 
 	strcpy(Content, "LOGIN");
 	strcat(Content, sep);
@@ -31,12 +30,11 @@ int CreateLoginFile()
 	}
 }
 
-int CreateTicketFile()
+int CreateTicketFile(char *sep)
 {
 	FILE* fp = NULL;
 	
-	char Content[1024] = "", sep[5];
-	strcpy(sep, getProperty("separateur_fichier"));
+	char Content[1024] = "";
 	strcpy(Content, "IDVOL");
 	strcat(Content, sep);
 	strcat(Content, "NUMBILLET\n");
@@ -57,12 +55,11 @@ int CreateTicketFile()
 	}
 }
 
-int FetchRow(char* cle, char* valeur, char* file)
+int FetchRow(char* cle, char* valeur, char* file, char* sep)
 {
 	FILE* fp = NULL;
 	int stop = 0;
-	char row[100], *property, *password, sep[5];
-	strcpy(sep, getProperty("separateur_fichier"));
+	char row[100], *property, *password;
 
 	if((fp = fopen(file, "r")) != NULL){
 		do{
@@ -117,22 +114,21 @@ int EcrireCsv(char *file, char *cle, char*valeur, char *separator)
 	return 1;
 }
 
-int CreateLuggageLog(char* IDLuggage, char* TypeLuggage)
+int CreateLuggageLog(char* IDLuggage, char* TypeLuggage, char* sep)
 {
 
 	FILE *fp;
 	int taille = strlen(IDLuggage) + 10;
-	char nomFichier[taille], *separator;
+	char nomFichier[taille];
 
-	separator = getProperty("separateur_fichier");
 	strcpy(nomFichier, IDLuggage);
 	strcat(nomFichier, "_lug.csv");
 
 	if((fp = fopen(nomFichier, "w")) != NULL){
-		int tailleRow = (strlen(IDLuggage) + strlen(TypeLuggage) + strlen(separator) + 1);
+		int tailleRow = (strlen(IDLuggage) + strlen(TypeLuggage) + strlen(sep) + 1);
 		char row[tailleRow];
 		strcpy(row, IDLuggage);
-		strcat(row, separator);
+		strcat(row, sep);
 		strcat(row, TypeLuggage);
 		fwrite(row, sizeof(char), tailleRow, fp);
 		printf("\nCréation du log %s OK\n", nomFichier);

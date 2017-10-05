@@ -14,20 +14,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h> 
 
-
-/*----TO DO LIST----
-
-1) Corriger les derniers petits bugs (genre le putain de fgets qui veut pas lire stdin)
-2) Threader tout le bordel
-3) Tester sous Unix et prier Jésus que ça fonctionne
-4) Ne pas céder à la panique
-999999) Faire des gestionnaires d'erreurs en fonction de errno (en gros, des switch(errno) case...: case...:)
-   histoire de pouvoir fournir des erreurs plus explicites (voir p55 bouquin TCP/IP)
-*/
-
-#define TAILLE_MSG 2000
 // Ports 26020 à 26029
-#define PORT_CHCK 26020
+#define TAILLE_MSG 2000
 
 //---------------------------------------------------------------------------------------
 /*
@@ -74,11 +62,11 @@ void CreateCheckinConfig()
 /*
 Ouvre le fichier de config et recherche le hostname
 */
-char* getProperty(char* propertyName)
+char* getProperty(char *file, char* propertyName)
 {
 	FILE* fp;
 	
-	if((fp = fopen("checkin.config", "r")) != NULL)
+	if((fp = fopen(file, "r")) != NULL)
 	{
 		char line[50], property[30], value[30];
 		int stop = 0;
@@ -118,12 +106,12 @@ char* getProperty(char* propertyName)
 				exit(1);
 			}
 		}
-		printf("Port non-trouvé, veuillez vérifier le fichier de configuration.\n"); //Si on sort du while c'est qu'on a atteint la fin du fichier sans trouver
+		printf("Element non-trouvé, veuillez vérifier le fichier de configuration.\n"); //Si on sort du while c'est qu'on a atteint la fin du fichier sans trouver
 		fclose(fp);	
 		return 0;
 	}
 	else{
-		printf("Erreur lors de l'ouverture du fichier checkin.config\n");
+		printf("Erreur lors de l'ouverture du fichier de config\n");
 		exit(1);
 	}
 }
@@ -132,9 +120,9 @@ char* getProperty(char* propertyName)
 /*
 Ouvre le fichier de config et cherche le port
 */
-unsigned int getPort(char* nomPort)
+unsigned int getPort(char* file, char* nomPort)
 {
-	int port = atoi(getProperty(nomPort));
+	int port = atoi(getProperty(file, nomPort));
 	if(port > 0)
 		return port;
 	else
@@ -145,18 +133,20 @@ unsigned int getPort(char* nomPort)
 /*
 Sépare le contenu de la requête de son type et retourne les deux valeurs.
 */
-int getRequest(char* request)
+int getRequest(char *sep, char* request)
 {
-	char sep[5], *content;
-	int requestType, tailleSep = strlen(sep);
-	strcpy(sep, getProperty("separateur_CIMP"));
-	//exemple de message de connexion : 1`aaa`bbb<EOM>
-	printf("[%s]\n", request);
-	content = strtok(request, sep);
-	sscanf(content, "%d", &requestType); //Le premier paramètre étant le type de requête, on le converti en int.
-	content = strtok(NULL, sep);
-	strcpy(request, content);
-	return requestType;
+	if(strcmp(request, "") != 0){
+		char *content;
+		int requestType, tailleSep = strlen(sep);
+		//exemple de message de connexion : 1`aaa`bbb<EOM>
+		printf("\nRecu: [%s]\n", request);
+		content = strtok(request, sep);
+		sscanf(content, "%d", &requestType); //Le premier paramètre étant le type de requête, on le converti en int.
+		content = strtok(NULL, sep);
+		strcpy(request, content);
+		return requestType;
+	}
+	return -1;
 }
 
 //---------------------------------------------------------------------------------------
@@ -279,7 +269,7 @@ int GetClient(int SocketHandle, struct sockaddr_in SocketAddress)
 		exit(1);
 	}
 	else{
-		printf("Client prit en charge par la socket d'écoute\n");
+		printf("Client pris en charge par la socket d'écoute\n");
 		return hTemp; //Valeur retournée = Handle de socket dédié à la connexion acceptée (duplication de socket)
 	}
 }
@@ -335,7 +325,7 @@ int SocketSend(int SocketHandle, char* msg)
 		return 0; //Pas d'exit ici, il faut clore toutes les sockets avant	
 	}
 	else{
-		printf("\nEnvoi OK [%s]\n", msg);
+		printf("\nEnvoié: [%s]\n", msg);
 		return 1;
 	}
 }
@@ -483,11 +473,11 @@ int SocketRcvEOM(int SocketHandle, char *rcv, int taille)
 /*
 Acquisition des infos sur l'ordinateur local
 */
-struct hostent* getLocalHost()
+struct hostent* getLocalHost(char *file)
 {
 	struct hostent* CurrentHost;
 
-	if((CurrentHost = gethostbyname( getProperty("hostname") )) == 0){//récupère le hostname dans le fichier de config puis cherche les infos dessus
+	if((CurrentHost = gethostbyname( getProperty(file, "hostname") )) == 0){//récupère le hostname dans le fichier de config puis cherche les infos dessus
 		printf("\nErreur d'acquisition d'infos sur le host %d\n", errno);
 		switch(errno){
 			case HOST_NOT_FOUND: printf("l'hote spécifié n'existe pas\n"); break;
@@ -513,11 +503,11 @@ Préparation de la structure sockaddr_in
 --- LA PREPARATION EST A FAIRE DANS LE FICHIER .C(PP) PRINCIPAL ! La structure doit être "préparée" avant d'être donnée en argument !
 (l'ennui de la repréparer à chaque fois c'est que 1) perte de performances 2) On écrase les valeurs précédentes qui auraient pu être simplement réutilisées
 */
-struct sockaddr_in initSocketAddress(struct sockaddr_in SocketAddress, struct hostent *CurrentHost, char* nomPort)
+struct sockaddr_in initSocketAddress(struct sockaddr_in SocketAddress, struct hostent *CurrentHost, char* nomPort, char *file)
 {
 	memset(&SocketAddress, 0, sizeof(struct sockaddr_in));
 	SocketAddress.sin_family = AF_INET; //domaine
-	SocketAddress.sin_port = htons(getPort(nomPort)); //conversion du numéro de port au format réseau
+	SocketAddress.sin_port = htons(getPort(file, nomPort)); //conversion du numéro de port au format réseau
 	memcpy(&SocketAddress.sin_addr, CurrentHost->h_addr, CurrentHost->h_length);
 	//printf("APRES MEMCPY : %s\n", inet_ntoa(SocketAddress.sin_addr));
 	return SocketAddress;

@@ -135,7 +135,7 @@ Sépare le contenu de la requête de son type et retourne les deux valeurs.
 */
 int getRequest(char *sep, char* request)
 {
-	if(strcmp(request, "") != 0){
+	if(request != NULL && strcmp(request, "") != 0){
 		char *content;
 		int requestType, tailleSep = strlen(sep);
 		//exemple de message de connexion : 1`aaa`bbb<EOM>

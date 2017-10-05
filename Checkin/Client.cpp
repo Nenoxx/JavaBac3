@@ -106,8 +106,8 @@ int main()
 			case '1':
 				{ //mettre le bloc (les crochets) sinon le compilateur râle.
 				char billet[20], sep[5], msg[TAILLE_MSG] = "", rcv[TAILLE_MSG], tmp[10], numvol[5], ArrayValise[TAILLE_MSG] = "", TypeValise[10], c;
-				int nbPersonnes = 0, prix_exces = 0, typeRequete = -1;
-				float poids = 0, poids_tot = 0;
+				int nbPersonnes = 0, typeRequete = -1;
+				float poids = 0, poids_tot = 0, prix_exces = 0;
 				short volOK = 1, billetOK = 1, nbPassOK = 1, LugOK = 1;//Booleens de protocole
 
 				//init
@@ -134,6 +134,7 @@ int main()
 							//2.2) Réception de la réponse du serveur
 							SocketRcvEOM(SocketClient, rcv, TAILLE_MSG);
 							typeRequete = getRequest(separator, rcv);
+							printf("typeRequete : %d\n", typeRequete);
 							if(typeRequete == OK){
 								printf("\nCLI> Billet confirmé\n");
 								billetOK = 1;
@@ -182,17 +183,18 @@ int main()
 											poids_ex = atof(p);
 											if(poids_ex > 0){ //Cas ou il y a un supplément à payer
 												p = strtok(NULL, separator2);
-												prix_exces = atof(p);
+												sscanf(p, "%f", &prix_exces);
 												printf("\n-----------\nPoids total des baggages : %.2f\nPoids excessif : %.2f\nCout supplémentaire : %.2f euros\n-----------\n", poids_tot, poids_ex, prix_exces);
+												c = getchar();
 												do//6) Vérification du paiement
 												{	
-													printf("Paiement effectué? (o/n): ");					
+													printf("Paiement effectué? (o/n): ");			
 													c = getchar();
 												}
 												while(c != 'o' && c != 'O' && c!= 'n' && c != 'N');
 												if(c == 'o' || c == 'O'){
 													printf("CLI> Le client a payé\n");
-													//6.1) Envoie au serveur que le clien a payé
+													//6.1) Envoie au serveur que le client a payé
 													SocketSendReqEOM(SocketClient, PAIEMENT, separator, "Paiement en ordre");
 													SocketSendReqEOM(SocketClient, BAGAGES, separator, ArrayValise);
 													SocketRcvEOM(SocketClient, rcv, TAILLE_MSG);

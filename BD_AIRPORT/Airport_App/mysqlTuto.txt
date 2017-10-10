@@ -15,7 +15,12 @@ Ajouter une clé primaire
 Ajouter une clé étrangère
 	->alter table NOM_TABLE add constraint NOM_CONTRAINTE foreign key (NOM_COLONNE) references NOM_TABLE(NOM_COLONNE);
 Exporter la schéma de la BDD :
-	->mysqldump -u NOM_USER -ppass (-d) olddb | mysql -u NOM_USER -ppass -Dnewdb
+	->mysqldump -u [username] -p [database name] > [database name].sql
 	le flag -d permet d'exporter sans les données.
 Ajouter la DB via Netbeans :
 	->voir page 173 de Java II
+Créer un user basique
+	->create user nom identified by 'password';
+	->grant all privileges/update/select/delete/... on NOM_DB.NOMTABLE to nom;
+enlever tous les privilèges
+	->revoke all privileges, grant option from nom;

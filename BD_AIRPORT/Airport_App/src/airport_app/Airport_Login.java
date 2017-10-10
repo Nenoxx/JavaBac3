@@ -64,6 +64,11 @@ public class Airport_Login extends javax.swing.JFrame {
         });
 
         jButton2.setText("Annuler");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         LoginLabel.setText("Login :");
 
@@ -73,7 +78,7 @@ public class Airport_Login extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
@@ -83,17 +88,16 @@ public class Airport_Login extends javax.swing.JFrame {
                             .addComponent(PasswordLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(PasswordTF)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(OracleButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 126, Short.MAX_VALUE))
-                            .addComponent(LoginTF)))
+                                .addGap(0, 186, Short.MAX_VALUE))
+                            .addComponent(LoginTF)
+                            .addComponent(PasswordTF, javax.swing.GroupLayout.Alignment.TRAILING)))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(8, 8, 8)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -123,32 +127,19 @@ public class Airport_Login extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         //Bon, faudrait rendre ça portable, mais bon j'ai la flemme en vrai.
-        String Path = System.getProperty("user.home") + "/Documents/Ecole/JavaBac3/Checkin/";
-        IFileReader frConf = new IFileReader(Path + "checkin.config");
-        IFileReader frLogin = new IFileReader(Path + "login.csv");
-        String separator = "";
-        
-        separator = frConf.GetProperty("separateur_fichier");
-        if(separator == null){
-            System.out.println("Erreur lors de la récupération du séparateur de fichier");
-        }
-        else{
-            String line = frLogin.FetchRow(LoginTF.getText(), separator);
-            String[] r = line.split(separator);
-            int type;
-            if(r[0].compareTo(LoginTF.getText()) == 0){
-                if(r[1].compareTo(PasswordTF.getText()) == 0){
-                    this.setVisible(false);
-                    if(MySQLButton.isSelected())
-                        type = 1;
-                    else
-                        type = 2;
-                    MainWindow = new Airport_GUI(type);
-                    MainWindow.setVisible(true);
-                }
-            }
-        }   
+        int type;
+        if(MySQLButton.isSelected())
+            type = 1;
+        else
+            type = 2;
+        MainWindow = new Airport_GUI(type, LoginTF.getText(), PasswordTF.getText());
+        MainWindow.setVisible(true);
+        this.setVisible(false);
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        this.dispose();
+    }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
      * @param args the command line arguments

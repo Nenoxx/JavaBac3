@@ -22,6 +22,7 @@ import net.proteanit.sql.DbUtils;
  */
 public class Airport_GUI extends javax.swing.JFrame {
     Connection con;
+    int TypeDB;
     /**
      * Creates new form Airport_GUI
      */
@@ -36,15 +37,27 @@ public class Airport_GUI extends javax.swing.JFrame {
         try{
             if(DBType == 1){ //1 = MySQL
                 con = DriverManager.getConnection("jdbc:mysql://localhost:3306/BD_AIRPORT", login, pwd);
+                System.out.println("Connexion établie à la BDD MySQL");
                 DatabaseMetaData m = con.getMetaData();
                 ResultSet tables = m.getTables(con.getCatalog(), null, "%", null);
                 while(tables.next()){
                     TableCB.addItem(tables.getString("TABLE_NAME"));
                 }
+                TypeDB = 1;
             }
             else if(DBType == 2){
-                //con = DriverManager.getConnection("adasdasd", login, pwd);
+                con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", login, pwd);
+                System.out.println("Connexion établie à la BDD Oracle");
+                Statement st = con.createStatement();
+                DatabaseMetaData m = con.getMetaData();
+                ResultSet tables = st.executeQuery("select object_name from user_objects where object_type = 'TABLE'");
+                while(tables.next()){
+                    TableCB.addItem(tables.getString(1));
+                }
+                TypeDB = 2;
             }
+            
+            
         }
         catch(SQLException ex)
         {
@@ -155,7 +168,11 @@ public class Airport_GUI extends javax.swing.JFrame {
             ResultSet rs = st.executeQuery("select * from " + (String)TableCB.getSelectedItem());
             //On modifie la JTable pour qu'elle se mette directement à jour en fonction
             //du nombre de colonnes, des noms, valeurs, etc...
-            Table.setModel(DbUtils.resultSetToTableModel(rs));
+            if(TypeDB == 1) Table.setModel(DbUtils.resultSetToTableModel(rs));
+            else{ // ^ ne fonctionne pas avec Oracle, va savoir...
+                
+            }
+            //-> marche pour MySQL, pas pour Oracle :(
             
         } catch (SQLException ex) {
             System.out.println("Han ouais : " + ex.getLocalizedMessage());
@@ -163,7 +180,7 @@ public class Airport_GUI extends javax.swing.JFrame {
     }//GEN-LAST:event_ListButtonActionPerformed
 
     private void ModifierButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ModifierButtonActionPerformed
-        UpdateGUI g = new UpdateGUI(this, true, con);  
+        UpdateGUI g = new UpdateGUI(this, true, con, TypeDB);  
         g.setVisible(true); //C'est modal, pas besoin d'attendre une valeur de retour
     }//GEN-LAST:event_ModifierButtonActionPerformed
 

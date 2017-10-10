@@ -98,6 +98,11 @@ public class Airport_GUI extends javax.swing.JFrame {
         TableCB.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         ModifierButton.setText("Modifier");
+        ModifierButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ModifierButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -147,6 +152,11 @@ public class Airport_GUI extends javax.swing.JFrame {
             System.out.println("Han ouais : " + ex.getLocalizedMessage());
         }
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void ModifierButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ModifierButtonActionPerformed
+        UpdateGUI g = new UpdateGUI(this, true, con);  
+        g.setVisible(true);
+    }//GEN-LAST:event_ModifierButtonActionPerformed
 
     /**
      * @param args the command line arguments

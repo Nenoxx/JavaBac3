@@ -32,11 +32,12 @@
                       <Component id="TableCB" min="-2" pref="246" max="-2" attributes="0"/>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Component id="ListButton" min="-2" pref="80" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="AnnulerButton" min="-2" pref="85" max="-2" attributes="0"/>
-                      <EmptySpace type="separate" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="ModifierButton" min="-2" pref="80" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="41" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="CompterButton" pref="93" max="32767" attributes="0"/>
                   </Group>
                   <Component id="jScrollPane1" max="32767" attributes="0"/>
               </Group>
@@ -54,6 +55,7 @@
                   <Component id="AnnulerButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="ModifierButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="TableCB" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="CompterButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
               <Component id="jScrollPane1" pref="302" max="32767" attributes="0"/>
@@ -125,6 +127,14 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ModifierButtonActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="CompterButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Compter"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="CompterButtonActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

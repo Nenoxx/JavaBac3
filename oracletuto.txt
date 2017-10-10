@@ -1,0 +1,6 @@
+Créer un user basique
+	->create user NOM identified by PWD;
+	->grant create session to NOM;
+	->grant insert any table to NOM;
+	->grant select any table to NOM;
+	->grant update any table to NOM;

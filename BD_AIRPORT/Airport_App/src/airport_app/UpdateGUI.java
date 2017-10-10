@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package airport_app;
+import database.utilities.MyDBUtils;
 import java.awt.event.*;
 import java.sql.*;
 import java.util.*;
@@ -51,7 +52,8 @@ public class UpdateGUI extends javax.swing.JDialog {
             else{
                 Statement st = con.createStatement();
                 DatabaseMetaData m = con.getMetaData();
-                ResultSet tables = st.executeQuery("select object_name from user_objects where object_type = 'TABLE'");
+                String query = "select object_name from user_objects where object_type = 'TABLE'";
+                ResultSet tables = MyDBUtils.MySelect(query, conn);
                 while(tables.next()){
                     TableCB.addItem(tables.getString(1));
                 }
@@ -68,12 +70,15 @@ public class UpdateGUI extends javax.swing.JDialog {
                 try {
                     Statement st = conn.createStatement();
                     ResultSet rs = null;
+                    String query = "";
                     //On récupère le nom des colonnes pour la table sélectionnée
                     if(TypeDB == 1) {
-                        rs = st.executeQuery("select * from information_schema.COLUMNS where table_name like '" + (String)TableCB.getSelectedItem() + "';");
+                        query = "select * from information_schema.COLUMNS where table_name like '" + (String)TableCB.getSelectedItem() + "';";
+                        rs = MyDBUtils.MySelect(query, conn);
                     }
                     else{
-                        rs = st.executeQuery("select column_name from user_tab_cols where table_name = '" + (String)TableCB.getSelectedItem() + "'");
+                        query = "select column_name from user_tab_cols where table_name = '" + (String)TableCB.getSelectedItem() + "'";
+                        rs = MyDBUtils.MySelect(query, conn);
                     }
                     //bite(rs);
                     ColonneCB.removeAllItems();
@@ -95,8 +100,10 @@ public class UpdateGUI extends javax.swing.JDialog {
                     //que la colonne est changée (dans la combobox)
                     Statement st = conn.createStatement();
                     ResultSet rs = null;
+                    String query = "";
                     if(TypeDB == 1){
-                        rs = st.executeQuery("select " + (String)ColonneCB.getSelectedItem() + " from " + (String)TableCB.getSelectedItem() + ";");
+                        query = "select " + (String)ColonneCB.getSelectedItem() + " from " + (String)TableCB.getSelectedItem() + ";";
+                        rs = MyDBUtils.MySelect(query, conn);
                         ValeurCB.removeAllItems();
                         while(rs.next())
                         {
@@ -105,13 +112,14 @@ public class UpdateGUI extends javax.swing.JDialog {
                         }
                     }
                     else{
-                        rs = st.executeQuery("select " + (String)ColonneCB.getSelectedItem() + " from " + (String)TableCB.getSelectedItem());
+                        query = "select " + (String)ColonneCB.getSelectedItem() + " from " + (String)TableCB.getSelectedItem();
+                        rs = MyDBUtils.MySelect(query, conn);
                         ValeurCB.removeAllItems();
                         int i = 0;
                         while(rs.next())
                         {
                             //System.out.println(rs.getObject(i));
-                            ValeurCB.addItem((rs.getObject(i).toString()));
+                            ValeurCB.addItem((String)rs.getString(1));
                             i++;
                         }
                     }
@@ -245,11 +253,10 @@ public class UpdateGUI extends javax.swing.JDialog {
         else{
             try {
                 //On crée une requête update avec les différents composants des ComboBox
-                Statement st = conn.createStatement();
                 String query = "update " + (String)TableCB.getSelectedItem() + " set " + (String)ColonneCB.getSelectedItem() + " = '"
-                                + NouvelleValeurTF.getText() + "' where " + (String)ColonneCB.getSelectedItem() + " = '" + (String)ValeurCB.getSelectedItem() + "';";
-                System.out.println("Query  : " + query);
-                if(st.executeUpdate(query) > 0){
+                                + NouvelleValeurTF.getText() + "' where " + (String)ColonneCB.getSelectedItem() + " = '" + (String)ValeurCB.getSelectedItem() +"'";
+                if(TypeDB == 1) query += ";";
+                if(MyDBUtils.MyUpdate(query, conn) > 0){
                     System.out.println("Requête exécutée avec succes");
                     this.setVisible(false);
                 }

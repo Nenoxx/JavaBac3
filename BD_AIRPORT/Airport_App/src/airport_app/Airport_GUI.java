@@ -9,7 +9,10 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import net.proteanit.sql.DbUtils;
+import database.utilities.MyDBUtils;
 
 /* A FAIRE 
 -Faire en sorte que la JTable s'adapte aux colonnes de chaque table de chaque DB
@@ -50,7 +53,8 @@ public class Airport_GUI extends javax.swing.JFrame {
                 System.out.println("Connexion établie à la BDD Oracle");
                 Statement st = con.createStatement();
                 DatabaseMetaData m = con.getMetaData();
-                ResultSet tables = st.executeQuery("select object_name from user_objects where object_type = 'TABLE'");
+                String query = "select object_name from user_objects where object_type = 'TABLE'";
+                ResultSet tables = MyDBUtils.MySelect(query, con);
                 while(tables.next()){
                     TableCB.addItem(tables.getString(1));
                 }
@@ -61,8 +65,11 @@ public class Airport_GUI extends javax.swing.JFrame {
         }
         catch(SQLException ex)
         {
-            System.out.println("Han ouais : " + ex.getLocalizedMessage());
-            this.dispose();
+            //System.out.println("Han ouais : " + ex.getLocalizedMessage());
+            JOptionPane.showMessageDialog(new JFrame(),
+                            ex.getLocalizedMessage(),
+                            "Erreur",
+                            JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -82,6 +89,7 @@ public class Airport_GUI extends javax.swing.JFrame {
         Table = new javax.swing.JTable();
         TableCB = new javax.swing.JComboBox<>();
         ModifierButton = new javax.swing.JButton();
+        CompterButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -123,6 +131,13 @@ public class Airport_GUI extends javax.swing.JFrame {
             }
         });
 
+        CompterButton.setText("Compter");
+        CompterButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CompterButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -136,11 +151,12 @@ public class Airport_GUI extends javax.swing.JFrame {
                         .addComponent(TableCB, javax.swing.GroupLayout.PREFERRED_SIZE, 246, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(ListButton, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(AnnulerButton, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(ModifierButton, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 41, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(CompterButton, javax.swing.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE))
                     .addComponent(jScrollPane1))
                 .addContainerGap())
         );
@@ -153,7 +169,8 @@ public class Airport_GUI extends javax.swing.JFrame {
                     .addComponent(ListButton)
                     .addComponent(AnnulerButton)
                     .addComponent(ModifierButton)
-                    .addComponent(TableCB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(TableCB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(CompterButton))
                 .addGap(30, 30, 30)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 302, Short.MAX_VALUE))
         );
@@ -165,13 +182,11 @@ public class Airport_GUI extends javax.swing.JFrame {
         try {
             //Simplement une requête SELECT
             Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery("select * from " + (String)TableCB.getSelectedItem());
+            String query = "select * from " + (String)TableCB.getSelectedItem();
+            ResultSet rs = MyDBUtils.MySelect(query, con);
             //On modifie la JTable pour qu'elle se mette directement à jour en fonction
             //du nombre de colonnes, des noms, valeurs, etc...
-            if(TypeDB == 1) Table.setModel(DbUtils.resultSetToTableModel(rs));
-            else{ // ^ ne fonctionne pas avec Oracle, va savoir...
-                
-            }
+            Table.setModel(DbUtils.resultSetToTableModel(rs));
             //-> marche pour MySQL, pas pour Oracle :(
             
         } catch (SQLException ex) {
@@ -187,6 +202,25 @@ public class Airport_GUI extends javax.swing.JFrame {
     private void AnnulerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AnnulerButtonActionPerformed
         this.dispose();
     }//GEN-LAST:event_AnnulerButtonActionPerformed
+
+    private void CompterButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CompterButtonActionPerformed
+        try {
+            Statement st = con.createStatement();
+            String query = "select count(*) as total from " + (String)TableCB.getSelectedItem();
+            if(TypeDB == 1) query += ";";
+            ResultSet rs = MyDBUtils.MySelect(query, con);
+            rs.next();
+            JOptionPane.showMessageDialog(new JFrame(),
+                            "Nombre de tuples : " + rs.getInt("total"),
+                            "Résultat de la requête",
+                            JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(new JFrame(),
+                            ex.getLocalizedMessage(),
+                            "Erreur",
+                            JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_CompterButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -226,6 +260,7 @@ public class Airport_GUI extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton AnnulerButton;
     private javax.swing.JLabel CategorieLabel;
+    private javax.swing.JButton CompterButton;
     private javax.swing.JButton ListButton;
     private javax.swing.JButton ModifierButton;
     private javax.swing.JTable Table;

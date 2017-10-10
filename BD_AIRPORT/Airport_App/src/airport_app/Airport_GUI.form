@@ -31,9 +31,9 @@
                       <EmptySpace min="-2" pref="2" max="-2" attributes="0"/>
                       <Component id="TableCB" min="-2" pref="246" max="-2" attributes="0"/>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
-                      <Component id="jButton1" min="-2" pref="80" max="-2" attributes="0"/>
+                      <Component id="ListButton" min="-2" pref="80" max="-2" attributes="0"/>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                      <Component id="jButton2" min="-2" pref="85" max="-2" attributes="0"/>
+                      <Component id="AnnulerButton" min="-2" pref="85" max="-2" attributes="0"/>
                       <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Component id="ModifierButton" min="-2" pref="80" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="41" max="32767" attributes="0"/>
@@ -50,8 +50,8 @@
               <EmptySpace min="-2" pref="37" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="CategorieLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jButton1" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jButton2" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="ListButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="AnnulerButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="ModifierButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="TableCB" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
@@ -67,18 +67,21 @@
         <Property name="text" type="java.lang.String" value="Cat&#xe9;gorie :"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JButton" name="jButton1">
+    <Component class="javax.swing.JButton" name="ListButton">
       <Properties>
         <Property name="text" type="java.lang.String" value="Lister"/>
       </Properties>
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jButton1ActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="ListButtonActionPerformed"/>
       </Events>
     </Component>
-    <Component class="javax.swing.JButton" name="jButton2">
+    <Component class="javax.swing.JButton" name="AnnulerButton">
       <Properties>
         <Property name="text" type="java.lang.String" value="Annuler"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="AnnulerButtonActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JScrollPane" name="jScrollPane1">
       <AuxValues>

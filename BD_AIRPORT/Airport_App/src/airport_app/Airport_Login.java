@@ -6,6 +6,7 @@
 package airport_app;
 
 import database.utilities.IFileReader;
+import javax.swing.JOptionPane;
 
 /* A FAIRE 
 
@@ -126,19 +127,25 @@ public class Airport_Login extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        //Bon, faudrait rendre ça portable, mais bon j'ai la flemme en vrai.
-        int type;
+        int type = 0;
         if(MySQLButton.isSelected())
             type = 1;
-        else
+        else if (OracleButton.isSelected())
             type = 2;
-        MainWindow = new Airport_GUI(type, LoginTF.getText(), PasswordTF.getText());
-        MainWindow.setVisible(true);
-        this.setVisible(false);
+        else{
+            JOptionPane.showMessageDialog(this, "Veuillez sélectionner une base de données", "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+            
+        if(type == 1 || type == 2){
+            MainWindow = new Airport_GUI(type, LoginTF.getText(), PasswordTF.getText());
+            MainWindow.setVisible(true);
+            this.setVisible(false);
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         this.dispose();
+        System.exit(0);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     /**

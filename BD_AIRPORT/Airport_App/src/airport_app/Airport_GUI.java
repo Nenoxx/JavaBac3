@@ -155,7 +155,7 @@ public class Airport_GUI extends javax.swing.JFrame {
 
     private void ModifierButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ModifierButtonActionPerformed
         UpdateGUI g = new UpdateGUI(this, true, con);  
-        g.setVisible(true);
+        g.setVisible(true); //C'est modal, pas besoin d'attendre une valeur de retour
     }//GEN-LAST:event_ModifierButtonActionPerformed
 
     /**

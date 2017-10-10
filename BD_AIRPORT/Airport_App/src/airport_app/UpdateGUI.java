@@ -19,6 +19,7 @@ import net.proteanit.sql.DbUtils;
  */
 public class UpdateGUI extends javax.swing.JDialog {
     Connection conn;
+    int TypeDB;
     /**
      * Creates new form UpdateGUI
      */
@@ -29,9 +30,10 @@ public class UpdateGUI extends javax.swing.JDialog {
         initComponents();
     }
     
-    public UpdateGUI(java.awt.Frame parent, boolean modal, Connection con) {
+    public UpdateGUI(java.awt.Frame parent, boolean modal, Connection con, int type) {
         super(parent, modal);
         initComponents();
+        TypeDB = type;
         TableCB.removeAllItems();
         ColonneCB.removeAllItems();
         ValeurCB.removeAllItems();
@@ -39,10 +41,20 @@ public class UpdateGUI extends javax.swing.JDialog {
         
         try{
             //On récupère toutes les tables
-            DatabaseMetaData m = conn.getMetaData();
-            ResultSet tables = m.getTables(conn.getCatalog(), null, "%", null);
-            while(tables.next()){
-                TableCB.addItem(tables.getString("TABLE_NAME"));
+            if(TypeDB == 1){
+                DatabaseMetaData m = conn.getMetaData();
+                ResultSet tables = m.getTables(conn.getCatalog(), null, "%", null);
+                while(tables.next()){
+                    TableCB.addItem(tables.getString("TABLE_NAME"));
+                }
+            }
+            else{
+                Statement st = con.createStatement();
+                DatabaseMetaData m = con.getMetaData();
+                ResultSet tables = st.executeQuery("select object_name from user_objects where object_type = 'TABLE'");
+                while(tables.next()){
+                    TableCB.addItem(tables.getString(1));
+                }
             }
         }
         catch(SQLException ex)
@@ -55,8 +67,14 @@ public class UpdateGUI extends javax.swing.JDialog {
             public void itemStateChanged(ItemEvent arg0) {
                 try {
                     Statement st = conn.createStatement();
+                    ResultSet rs = null;
                     //On récupère le nom des colonnes pour la table sélectionnée
-                    ResultSet rs = st.executeQuery("select * from information_schema.COLUMNS where table_name like '" + (String)TableCB.getSelectedItem() + "';");
+                    if(TypeDB == 1) {
+                        rs = st.executeQuery("select * from information_schema.COLUMNS where table_name like '" + (String)TableCB.getSelectedItem() + "';");
+                    }
+                    else{
+                        rs = st.executeQuery("select column_name from user_tab_cols where table_name = '" + (String)TableCB.getSelectedItem() + "'");
+                    }
                     //bite(rs);
                     ColonneCB.removeAllItems();
                     while(rs.next())
@@ -64,7 +82,7 @@ public class UpdateGUI extends javax.swing.JDialog {
                         ColonneCB.addItem(rs.getString("COLUMN_NAME"));
                     }
                 } catch (SQLException ex) {
-                    System.out.println("Han ouais : " + ex.getLocalizedMessage());
+                    System.out.println(ex.getLocalizedMessage());
                 }
             }
         });
@@ -76,19 +94,33 @@ public class UpdateGUI extends javax.swing.JDialog {
                     //On va lister toutes les valeurs de la colonne de la table à chaque fois
                     //que la colonne est changée (dans la combobox)
                     Statement st = conn.createStatement();
-                    ResultSet rs = st.executeQuery("select " + (String)ColonneCB.getSelectedItem() + " from " + (String)TableCB.getSelectedItem() + ";");
-                    System.out.println("Query executed");
-                    bite(rs);
-                    ValeurCB.removeAllItems();
-                    while(rs.next())
-                    {
-                        System.out.println(rs.getString(1));
-                        ValeurCB.addItem((String)rs.getString(1));
+                    ResultSet rs = null;
+                    if(TypeDB == 1){
+                        rs = st.executeQuery("select " + (String)ColonneCB.getSelectedItem() + " from " + (String)TableCB.getSelectedItem() + ";");
+                        ValeurCB.removeAllItems();
+                        while(rs.next())
+                        {
+                            System.out.println(rs.getString(1));
+                            ValeurCB.addItem((String)rs.getString(1));
+                        }
                     }
+                    else{
+                        rs = st.executeQuery("select " + (String)ColonneCB.getSelectedItem() + " from " + (String)TableCB.getSelectedItem());
+                        ValeurCB.removeAllItems();
+                        int i = 0;
+                        while(rs.next())
+                        {
+                            //System.out.println(rs.getObject(i));
+                            ValeurCB.addItem((rs.getObject(i).toString()));
+                            i++;
+                        }
+                    }
+                    System.out.println("Query executed");
+                    
                 }
                 catch(SQLException ex)
                 {
-                    System.out.println("Han ouais : " + ex.getLocalizedMessage());
+                    System.out.println(ex.getLocalizedMessage());
                 }
             }
         });
@@ -228,30 +260,6 @@ public class UpdateGUI extends javax.swing.JDialog {
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void bite(ResultSet rs)
-    {
-        try{
-          ResultSetMetaData meta = rs.getMetaData(); 
-
-          Integer columncount = meta.getColumnCount();
-
-          int count = 1 ; // start counting from 1 always
-
-          String[] columnNames = new String[columncount];
-
-          while(count<=columncount){
-
-             columnNames [count-1] = meta.getColumnName(count);
-             System.out.println(columnNames[count-1]);
-             count++;
-
-          }
-        }
-        catch(Exception e)
-        {
-              System.out.println("oui");  
-        }
-      }
     /**
      * @param args the command line arguments
      */

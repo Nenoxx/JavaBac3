@@ -80,7 +80,6 @@ public class UpdateGUI extends javax.swing.JDialog {
                         query = "select column_name from user_tab_cols where table_name = '" + (String)TableCB.getSelectedItem() + "'";
                         rs = MyDBUtils.MySelect(query, conn);
                     }
-                    //bite(rs);
                     ColonneCB.removeAllItems();
                     while(rs.next())
                     {

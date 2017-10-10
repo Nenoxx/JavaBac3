@@ -200,7 +200,11 @@ public class Airport_GUI extends javax.swing.JFrame {
     }//GEN-LAST:event_ModifierButtonActionPerformed
 
     private void AnnulerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AnnulerButtonActionPerformed
-        this.dispose();
+        JOptionPane.showMessageDialog(new JFrame(),
+                            "Au revoir !",
+                            "Fermeture de l'application",
+                            JOptionPane.INFORMATION_MESSAGE);
+        System.exit(0);
     }//GEN-LAST:event_AnnulerButtonActionPerformed
 
     private void CompterButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CompterButtonActionPerformed

@@ -9,10 +9,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-<<<<<<< HEAD
 import javax.swing.JFrame;
-=======
->>>>>>> refs/remotes/origin/master
 import javax.swing.JOptionPane;
 import net.proteanit.sql.DbUtils;
 import database.utilities.MyDBUtils;
@@ -68,20 +65,11 @@ public class Airport_GUI extends javax.swing.JFrame {
         }
         catch(SQLException ex)
         {
-<<<<<<< HEAD
             //System.out.println("Han ouais : " + ex.getLocalizedMessage());
             JOptionPane.showMessageDialog(new JFrame(),
                             ex.getLocalizedMessage(),
                             "Erreur",
                             JOptionPane.ERROR_MESSAGE);
-=======
-            String msg = "Erreur: ";
-            msg += ex.getLocalizedMessage();
-            System.out.println(msg);
-            JOptionPane.showMessageDialog(this, msg, "Erreur", JOptionPane.ERROR_MESSAGE);
-            this.dispose();
-            System.exit(0);
->>>>>>> refs/remotes/origin/master
         }
     }
 
@@ -96,7 +84,7 @@ public class Airport_GUI extends javax.swing.JFrame {
 
         CategorieLabel = new javax.swing.JLabel();
         ListButton = new javax.swing.JButton();
-        QuitterButton = new javax.swing.JButton();
+        AnnulerButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         Table = new javax.swing.JTable();
         TableCB = new javax.swing.JComboBox<>();
@@ -114,10 +102,10 @@ public class Airport_GUI extends javax.swing.JFrame {
             }
         });
 
-        QuitterButton.setText("Quitter");
-        QuitterButton.addActionListener(new java.awt.event.ActionListener() {
+        AnnulerButton.setText("Annuler");
+        AnnulerButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                QuitterButtonActionPerformed(evt);
+                AnnulerButtonActionPerformed(evt);
             }
         });
 
@@ -157,13 +145,11 @@ public class Airport_GUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(CategorieLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(2, 2, 2)
                         .addComponent(TableCB, javax.swing.GroupLayout.PREFERRED_SIZE, 246, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-<<<<<<< HEAD
                         .addComponent(ListButton, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(AnnulerButton, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -172,32 +158,21 @@ public class Airport_GUI extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(CompterButton, javax.swing.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE))
                     .addComponent(jScrollPane1))
-=======
-                        .addComponent(ListButton, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(ModifierButton, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(QuitterButton)
-                        .addGap(0, 12, Short.MAX_VALUE)))
->>>>>>> refs/remotes/origin/master
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(43, 43, 43)
+                .addGap(37, 37, 37)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(CategorieLabel)
                     .addComponent(ListButton)
+                    .addComponent(AnnulerButton)
                     .addComponent(ModifierButton)
                     .addComponent(TableCB, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-<<<<<<< HEAD
                     .addComponent(CompterButton))
-=======
-                    .addComponent(QuitterButton))
->>>>>>> refs/remotes/origin/master
                 .addGap(30, 30, 30)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 302, Short.MAX_VALUE))
         );
 
         pack();
@@ -215,23 +190,18 @@ public class Airport_GUI extends javax.swing.JFrame {
             //-> marche pour MySQL, pas pour Oracle :(
             
         } catch (SQLException ex) {
-            String msg = "Erreur: ";
-            msg += ex.getLocalizedMessage();
-            System.out.println(msg);
-            JOptionPane.showMessageDialog(this, msg, "Erreur", JOptionPane.ERROR_MESSAGE);
+            System.out.println("Han ouais : " + ex.getLocalizedMessage());
         }
     }//GEN-LAST:event_ListButtonActionPerformed
 
     private void ModifierButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ModifierButtonActionPerformed
         UpdateGUI g = new UpdateGUI(this, true, con, TypeDB);  
         g.setVisible(true); //C'est modal, pas besoin d'attendre une valeur de retour
-        ListButton.doClick();
     }//GEN-LAST:event_ModifierButtonActionPerformed
 
-    private void QuitterButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_QuitterButtonActionPerformed
+    private void AnnulerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AnnulerButtonActionPerformed
         this.dispose();
-        System.exit(0);
-    }//GEN-LAST:event_QuitterButtonActionPerformed
+    }//GEN-LAST:event_AnnulerButtonActionPerformed
 
     private void CompterButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CompterButtonActionPerformed
         try {
@@ -288,11 +258,11 @@ public class Airport_GUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton AnnulerButton;
     private javax.swing.JLabel CategorieLabel;
     private javax.swing.JButton CompterButton;
     private javax.swing.JButton ListButton;
     private javax.swing.JButton ModifierButton;
-    private javax.swing.JButton QuitterButton;
     private javax.swing.JTable Table;
     private javax.swing.JComboBox<String> TableCB;
     private javax.swing.JScrollPane jScrollPane1;

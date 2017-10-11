@@ -253,7 +253,9 @@ public class UpdateGUI extends javax.swing.JDialog {
             try {
                 //On crée une requête update avec les différents composants des ComboBox
                 String query = "update " + (String)TableCB.getSelectedItem() + " set " + (String)ColonneCB.getSelectedItem() + " = '"
-                                + NouvelleValeurTF.getText() + "' where " + (String)ColonneCB.getSelectedItem() + " = '" + (String)ValeurCB.getSelectedItem() +"'";
+                                + NouvelleValeurTF.getText() + "' where " + (String)ColonneCB.getSelectedItem();
+                if((String)ValeurCB.getSelectedItem() == null) query += " is null";
+                else query += " = '" + (String)ValeurCB.getSelectedItem() +"'";
                 if(TypeDB == 1) query += ";";
                 if(MyDBUtils.MyUpdate(query, conn) > 0){
                     System.out.println("Requête exécutée avec succes");

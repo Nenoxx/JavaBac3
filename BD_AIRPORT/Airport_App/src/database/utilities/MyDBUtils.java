@@ -16,12 +16,14 @@ public class MyDBUtils {
     public static synchronized ResultSet MySelect(String query, Connection con) throws SQLException{
         Statement st = con.createStatement();
         ResultSet rs = st.executeQuery(query);
+        System.out.println("Requête exécutée : " + query);
         return rs;
     }
     
     //Retourne le nombre de lignes mises à jour
     public static synchronized int MyUpdate(String query, Connection con) throws SQLException{
         Statement st = con.createStatement();
+        System.out.println("Requête exécutée : " + query);
         return st.executeUpdate(query);
     }
     

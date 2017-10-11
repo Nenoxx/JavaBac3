@@ -27,6 +27,23 @@ public class MyDBUtils {
         return st.executeUpdate(query);
     }
     
+    public static synchronized Connection MyConnection(int DBType, String login, String pwd) throws SQLException
+    {
+        Connection con = null;
+        if(DBType == 1){ //1 = MySQL
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/BD_AIRPORT", login, pwd);
+            System.out.println("Connexion établie à la BDD MySQL");
+        }
+        else if(DBType == 2){
+            con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", login, pwd);
+            System.out.println("Connexion établie à la BDD Oracle");
+            Statement st = con.createStatement();
+        }
+        
+        return con;
+    }
+    
+    
     
     
 }

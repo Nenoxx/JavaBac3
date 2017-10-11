@@ -39,8 +39,7 @@ public class Airport_GUI extends javax.swing.JFrame {
         TableCB.removeAllItems();
         try{
             if(DBType == 1){ //1 = MySQL
-                con = DriverManager.getConnection("jdbc:mysql://localhost:3306/BD_AIRPORT", login, pwd);
-                System.out.println("Connexion établie à la BDD MySQL");
+                con = MyDBUtils.MyConnection(DBType, login, pwd);
                 DatabaseMetaData m = con.getMetaData();
                 ResultSet tables = m.getTables(con.getCatalog(), null, "%", null);
                 while(tables.next()){
@@ -49,8 +48,7 @@ public class Airport_GUI extends javax.swing.JFrame {
                 TypeDB = 1;
             }
             else if(DBType == 2){
-                con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:XE", login, pwd);
-                System.out.println("Connexion établie à la BDD Oracle");
+                con = MyDBUtils.MyConnection(DBType, login, pwd);
                 Statement st = con.createStatement();
                 DatabaseMetaData m = con.getMetaData();
                 String query = "select object_name from user_objects where object_type = 'TABLE'";
@@ -70,6 +68,7 @@ public class Airport_GUI extends javax.swing.JFrame {
                             ex.getLocalizedMessage(),
                             "Erreur",
                             JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
         }
     }
 
@@ -187,16 +186,19 @@ public class Airport_GUI extends javax.swing.JFrame {
             //On modifie la JTable pour qu'elle se mette directement à jour en fonction
             //du nombre de colonnes, des noms, valeurs, etc...
             Table.setModel(DbUtils.resultSetToTableModel(rs));
-            //-> marche pour MySQL, pas pour Oracle :(
             
         } catch (SQLException ex) {
-            System.out.println("Han ouais : " + ex.getLocalizedMessage());
+            JOptionPane.showMessageDialog(new JFrame(),
+                            ex.getLocalizedMessage(),
+                            "Erreur",
+                            JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_ListButtonActionPerformed
 
     private void ModifierButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ModifierButtonActionPerformed
         UpdateGUI g = new UpdateGUI(this, true, con, TypeDB);  
         g.setVisible(true); //C'est modal, pas besoin d'attendre une valeur de retour
+        ListButton.doClick();
     }//GEN-LAST:event_ModifierButtonActionPerformed
 
     private void AnnulerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AnnulerButtonActionPerformed

@@ -86,7 +86,11 @@ public class UpdateGUI extends javax.swing.JDialog {
                         ColonneCB.addItem(rs.getString("COLUMN_NAME"));
                     }
                 } catch (SQLException ex) {
-                    System.out.println(ex.getLocalizedMessage());
+                    JOptionPane.showMessageDialog(new JFrame(),
+                            ex.getLocalizedMessage(),
+                            "Erreur",
+                            JOptionPane.ERROR_MESSAGE);
+
                 }
             }
         });
@@ -127,7 +131,11 @@ public class UpdateGUI extends javax.swing.JDialog {
                 }
                 catch(SQLException ex)
                 {
-                    System.out.println(ex.getLocalizedMessage());
+                    JOptionPane.showMessageDialog(new JFrame(),
+                            ex.getLocalizedMessage(),
+                            "Erreur",
+                            JOptionPane.ERROR_MESSAGE);
+
                 }
             }
         });
@@ -147,8 +155,8 @@ public class UpdateGUI extends javax.swing.JDialog {
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        OKButton = new javax.swing.JButton();
+        AnnulerButton = new javax.swing.JButton();
         TableCB = new javax.swing.JComboBox<>();
         ColonneCB = new javax.swing.JComboBox<>();
         ValeurCB = new javax.swing.JComboBox<>();
@@ -164,17 +172,17 @@ public class UpdateGUI extends javax.swing.JDialog {
 
         jLabel4.setText("Nouvelle valeur :");
 
-        jButton1.setText("OK");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        OKButton.setText("OK");
+        OKButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                OKButtonActionPerformed(evt);
             }
         });
 
-        jButton2.setText("Annuler");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        AnnulerButton.setText("Annuler");
+        AnnulerButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                AnnulerButtonActionPerformed(evt);
             }
         });
 
@@ -203,9 +211,9 @@ public class UpdateGUI extends javax.swing.JDialog {
                         .addComponent(ColonneCB, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(TableCB, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(OKButton, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(AnnulerButton, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -229,19 +237,19 @@ public class UpdateGUI extends javax.swing.JDialog {
                     .addComponent(jLabel4))
                 .addGap(47, 47, 47)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2))
+                    .addComponent(OKButton)
+                    .addComponent(AnnulerButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void AnnulerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AnnulerButtonActionPerformed
         this.dispose();
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }//GEN-LAST:event_AnnulerButtonActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void OKButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_OKButtonActionPerformed
         if(NouvelleValeurTF.getText().isEmpty()) //HELA CAMARADE ! T'ESSAIES DE NIQUER MA BDD?
         {
             JOptionPane.showMessageDialog(new JFrame(),
@@ -262,11 +270,14 @@ public class UpdateGUI extends javax.swing.JDialog {
                     this.setVisible(false);
                 }
             } catch (SQLException ex) {
-                System.out.println("Gloups : " + ex.getLocalizedMessage());
+                JOptionPane.showMessageDialog(new JFrame(),
+                            ex.getLocalizedMessage(),
+                            "Erreur",
+                            JOptionPane.ERROR_MESSAGE);
             }
             
         }
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_OKButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -311,12 +322,12 @@ public class UpdateGUI extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton AnnulerButton;
     private javax.swing.JComboBox<String> ColonneCB;
     private javax.swing.JTextField NouvelleValeurTF;
+    private javax.swing.JButton OKButton;
     private javax.swing.JComboBox<String> TableCB;
     private javax.swing.JComboBox<String> ValeurCB;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

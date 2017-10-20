@@ -1,0 +1,5 @@
+copier les 3 fichiers .jar dans ProgramFiles\Java\jdkxxx\jre\lib\ext
+
+puis ouvrir ProgramFiles\Java\jdkxxx\jre\lib\security\java.security
+et y ajouter la ligne:
+security.provider.11=org.bouncycastle.jce.provider.BouncyCastleProvider

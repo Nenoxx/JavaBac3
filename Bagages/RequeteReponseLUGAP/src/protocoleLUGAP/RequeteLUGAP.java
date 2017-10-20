@@ -38,7 +38,7 @@ public class RequeteLUGAP implements Requete, Serializable{
     }
     
     @Override
-    public Runnable createRunnable(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs) {
+    public Runnable createRunnable(Socket s, ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs) {
         if(type == TEST){
             return new Runnable(){
                 public void run(){

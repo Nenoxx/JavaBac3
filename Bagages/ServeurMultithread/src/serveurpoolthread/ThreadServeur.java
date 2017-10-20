@@ -25,6 +25,8 @@ public class ThreadServeur extends Thread {
     private SourceTaches tachesAExecuter;
     private ConsoleServeur guiApplication;
     private ServerSocket SSocket = null;
+    String loginBD;
+    String pwdBD;
     
     public ThreadServeur(int p, SourceTaches st, ConsoleServeur cs){
         port = p;
@@ -45,6 +47,8 @@ public class ThreadServeur extends Thread {
         int nbThreads = 0;
         try{
             nbThreads = Integer.parseInt(myGetProperty("config.properties", "NB_THREADS"));
+            loginBD = myGetProperty("config.properties", "LOGIN");
+            pwdBD = myGetProperty("config.properties", "PASSWORD");
         }catch(FileNotFoundException e){
             System.err.println("Erreur: fichier properties non trouvé");
             System.exit(1);
@@ -62,7 +66,7 @@ public class ThreadServeur extends Thread {
         // Connexion à la base de données
         Connection con = null;
         try{
-            con = MyConnection(1, "arnaud" , "arnaud");
+            con = MyConnection(1, loginBD , pwdBD);
         }catch(SQLException e){
             System.err.println("Erreur de connexion à la base de données: "+ e.getMessage());
             System.exit(1);
@@ -94,14 +98,14 @@ public class ThreadServeur extends Thread {
             Requete req = null;
             try{
                 req = (Requete)ois.readObject();
-                System.out.println("Requete lur par le serveur, instance de " + req.getClass().getName());
+                System.out.println("Requete lue par le serveur, instance de " + req.getClass().getName());
             }catch(ClassNotFoundException e){
                 System.err.println("Erreur de definition de classe: "+ e.getMessage());
             }catch(IOException e){
                 System.err.println("Erreur: "+ e.getMessage());
             }
             
-            Runnable travail = req.createRunnable(oos, ois, con, guiApplication);
+            Runnable travail = req.createRunnable(CSocket, oos, ois, con, guiApplication);
             if(travail != null){
                 tachesAExecuter.recordTache(travail);
                 System.out.println("Travail mis en file d'attente");

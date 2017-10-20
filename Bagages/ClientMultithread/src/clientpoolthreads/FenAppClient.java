@@ -11,6 +11,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import protocoleLUGAP.*;
 import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import static myutils.MyPropUtils.myGetProperty;
 import static myutils.MyCrypto.*;
@@ -97,6 +99,7 @@ public class FenAppClient extends javax.swing.JFrame {
         }
         else{
             JOptionPane.showMessageDialog(this, "Impossible de se connecter à la base de données", "Warning", JOptionPane.WARNING_MESSAGE);
+            System.exit(1);
         }  
     }
 
@@ -166,10 +169,11 @@ public class FenAppClient extends javax.swing.JFrame {
         String chargeUtile = TFRequete.getText();
         RequeteLUGAP req = null;
         
-        req = new RequeteLUGAP(RequeteLUGAP.TEST, chargeUtile);
+        req = new RequeteLUGAP(RequeteLUGAP.TEST, chargeUtile); 
         
         //envoi de la requete
         try{
+            oos = new ObjectOutputStream(cliSocket.getOutputStream());
             oos.writeObject(req);
             oos.flush();
         }catch(IOException e){

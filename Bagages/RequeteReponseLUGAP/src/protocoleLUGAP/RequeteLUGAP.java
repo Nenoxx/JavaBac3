@@ -9,8 +9,8 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 import java.security.*;
-import requetepoolthreads.ConsoleServeur;
-import requetepoolthreads.Requete;
+import java.sql.Connection;
+import requetepoolthreads.*;
 import static myutils.MyCrypto.*;
 
 /**
@@ -38,18 +38,18 @@ public class RequeteLUGAP implements Requete, Serializable{
     }
     
     @Override
-    public Runnable createRunnable(Socket s, ConsoleServeur cs) {
+    public Runnable createRunnable(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs) {
         if(type == TEST){
             return new Runnable(){
                 public void run(){
-                    traiteRequeteTest(s,cs);
+                    traiteRequeteTest(oos, ois, con, cs);
                 }
             };
         }
         else if(type == LOGIN){
             return new Runnable(){
                 public void run(){
-                    traiteRequeteLogin(s,cs);
+                    traiteRequeteLogin(oos, ois, con, cs);
                 }
             };
 
@@ -57,14 +57,14 @@ public class RequeteLUGAP implements Requete, Serializable{
             return null;
     }
     
-    private void traiteRequeteTest(Socket s, ConsoleServeur cs){
+    private void traiteRequeteTest(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
         System.out.println("Debut de traiteRequeteTest");
         System.out.println("Recu: [" + getChargeUtile() + "]");
         ReponseLUGAP rep = new ReponseLUGAP(ReponseLUGAP.OK, getChargeUtile() + " OK");
         
-        ObjectOutputStream oos;
+        //ObjectOutputStream oos;
         try{
-            oos = new ObjectOutputStream(s.getOutputStream());
+            //oos = new ObjectOutputStream(s.getOutputStream());
             oos.writeObject(rep);
             oos.flush();
         }catch(IOException e){
@@ -72,9 +72,9 @@ public class RequeteLUGAP implements Requete, Serializable{
         }
     }
     
-    private void traiteRequeteLogin(Socket s, ConsoleServeur cs){
+    private void traiteRequeteLogin(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
         boolean bool = false;
-        ObjectOutputStream oos;
+        //ObjectOutputStream oos;
         String digest = getChargeUtile();
         ReponseLUGAP rep = null;
         
@@ -101,7 +101,7 @@ public class RequeteLUGAP implements Requete, Serializable{
         }
 
         try{
-            oos = new ObjectOutputStream(s.getOutputStream());
+            //oos = new ObjectOutputStream(s.getOutputStream());
             oos.writeObject(rep);
             oos.flush();
         }catch(IOException e){

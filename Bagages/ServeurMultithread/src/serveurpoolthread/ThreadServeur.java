@@ -9,7 +9,9 @@ import java.net.*;
 import java.io.*;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.sql.*;
 import static myutils.MyCrypto.*;
+import static myutils.MyDBUtils.MyConnection;
 import requetepoolthreads.ConsoleServeur;
 import requetepoolthreads.Requete;
 import static myutils.MyPropUtils.myGetProperty;
@@ -39,7 +41,7 @@ public class ThreadServeur extends Thread {
             System.exit(1);
         }
         
-        // Récupère nbThreads
+        // Récupère nbThreads, login et password de connexion à la BD
         int nbThreads = 0;
         try{
             nbThreads = Integer.parseInt(myGetProperty("config.properties", "NB_THREADS"));
@@ -57,6 +59,15 @@ public class ThreadServeur extends Thread {
             thr.start();
         }
         
+        // Connexion à la base de données
+        Connection con = null;
+        try{
+            con = MyConnection(1, "arnaud" , "arnaud");
+        }catch(SQLException e){
+            System.err.println("Erreur de connexion à la base de données: "+ e.getMessage());
+            System.exit(1);
+        }
+        
         // Attente d'une connexion
         Socket CSocket = null;
         while(!isInterrupted()){
@@ -72,8 +83,10 @@ public class ThreadServeur extends Thread {
             // Client connecté
             System.out.println("Client Accepté");
             ObjectInputStream ois = null;
+            ObjectOutputStream oos = null;
             try{
                 ois = new ObjectInputStream(CSocket.getInputStream());
+                oos = new ObjectOutputStream(CSocket.getOutputStream());
             }catch(IOException e){
                 System.err.println("Erreur: "+ e.getMessage());
             }
@@ -88,7 +101,7 @@ public class ThreadServeur extends Thread {
                 System.err.println("Erreur: "+ e.getMessage());
             }
             
-            Runnable travail = req.createRunnable(CSocket, guiApplication);
+            Runnable travail = req.createRunnable(oos, ois, con, guiApplication);
             if(travail != null){
                 tachesAExecuter.recordTache(travail);
                 System.out.println("Travail mis en file d'attente");

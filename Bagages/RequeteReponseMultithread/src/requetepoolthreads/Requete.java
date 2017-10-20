@@ -5,11 +5,13 @@
  */
 package requetepoolthreads;
 
-import java.net.*;
+import java.io.*;
+import java.sql.Connection;
+
 /**
  *
  * @author Arnaud
  */
 public interface Requete {
-    public Runnable createRunnable (Socket s, ConsoleServeur cs);
+    public Runnable createRunnable (ObjectOutputStream oos, ObjectInputStream ois, Connection conn , ConsoleServeur cs);
 }

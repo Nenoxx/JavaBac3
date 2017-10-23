@@ -22,6 +22,7 @@ public class RequeteLUGAP implements Requete, Serializable{
 
     public static int LOGIN = 1;
     public static int TEST = 0;
+    public static int SQLQUERY = 2;
     public static int LOGOUT = 10;
     
     private int type;
@@ -59,6 +60,14 @@ public class RequeteLUGAP implements Requete, Serializable{
                     }
                 };
 
+            }
+            else if (type == SQLQUERY){
+                return new Runnable(){
+                    public void run(){
+                        System.out.println("Traitement de requête SQL");
+                        traiteRequeteSQL(oos, ois, con, cs);
+                    }
+                };
             }
         }
         while(type != LOGOUT);
@@ -124,6 +133,26 @@ public class RequeteLUGAP implements Requete, Serializable{
         }
     }
     
+    private void traiteRequeteSQL(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
+        System.out.println("Debut de traiteRequeteTest");
+        System.out.println("Recu: [" + getChargeUtile() + "]");
+        ReponseLUGAP rep = new ReponseLUGAP(ReponseLUGAP.OK, getChargeUtile() + " OK");
+        String query = getChargeUtile();
+        
+        
+        //ObjectOutputStream oos;
+        try{
+            ResultSet rs = MyDBUtils.MySelect(query, con);
+            //oos = new ObjectOutputStream(s.getOutputStream());
+            oos.writeObject(rs);
+            oos.flush();
+        }catch(IOException e){
+            System.out.println("Erreur d'accès au flux d'output: "+ e.getMessage());
+        }catch(SQLException e){
+            System.out.println("Erreur d'accès au flux d'output: "+ e.getMessage());
+        }
+        
+    }
     public String getChargeUtile(){
         return chargeUtile;
     }

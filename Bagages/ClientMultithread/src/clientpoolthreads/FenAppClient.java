@@ -14,8 +14,11 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 import static myutils.MyPropUtils.myGetProperty;
 import static myutils.MyCrypto.*;
+import myutils.MyDBUtils;
+import net.proteanit.sql.DbUtils;
 /**
  *
  * @author Arnaud
@@ -36,7 +39,7 @@ public class FenAppClient extends javax.swing.JFrame {
     
     public FenAppClient(String login, String password){
         initComponents();
-        
+        ((DefaultTableModel)Table.getModel()).setRowCount(0);
         //infos sur le serveur du fichier config
         ois = null;
         oos = null;
@@ -124,6 +127,9 @@ public class FenAppClient extends javax.swing.JFrame {
         BEnvoyer = new javax.swing.JButton();
         LReponse = new javax.swing.JLabel();
         LConnecte = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        Table = new javax.swing.JTable();
+        AfficherVolButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Application_Bagages");
@@ -135,25 +141,45 @@ public class FenAppClient extends javax.swing.JFrame {
             }
         });
 
-        LConnecte.setText("jLabel1");
+        Table.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane1.setViewportView(Table);
+
+        AfficherVolButton.setText("Afficher les vols");
+        AfficherVolButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                AfficherVolButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(33, 33, 33)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 374, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(LReponse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(LConnecte, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(LConnecte, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
                         .addComponent(BEnvoyer)
                         .addGap(18, 18, 18)
-                        .addComponent(TFRequete, javax.swing.GroupLayout.DEFAULT_SIZE, 289, Short.MAX_VALUE)))
+                        .addComponent(TFRequete))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(AfficherVolButton)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -161,13 +187,20 @@ public class FenAppClient extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(LConnecte)
-                .addGap(80, 80, 80)
+                .addGap(34, 34, 34)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(TFRequete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(BEnvoyer))
-                .addGap(71, 71, 71)
-                .addComponent(LReponse)
-                .addContainerGap(101, Short.MAX_VALUE))
+                    .addComponent(BEnvoyer)
+                    .addComponent(TFRequete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(117, 117, 117)
+                        .addComponent(LReponse))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addComponent(AfficherVolButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -201,6 +234,18 @@ public class FenAppClient extends javax.swing.JFrame {
         }
         LReponse.setText(rep.getChargeUtile());
     }//GEN-LAST:event_BEnvoyerActionPerformed
+
+    private void AfficherVolButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AfficherVolButtonActionPerformed
+        String query = "select * from VOLS";
+        try {
+            //ICI : Envoyer une requête au serveur pour demander un ResultSet?
+            //ois.readObject() //-> En espérant recevoir un object ResultSet
+            ResultSet rs = MyDBUtils.MySelect(query, con);
+            Table.setModel(DbUtils.resultSetToTableModel(rs));
+        } catch (SQLException ex) {
+            System.out.println(ex.getLocalizedMessage());
+        }
+    }//GEN-LAST:event_AfficherVolButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -238,9 +283,12 @@ public class FenAppClient extends javax.swing.JFrame {
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton AfficherVolButton;
     private javax.swing.JButton BEnvoyer;
     private javax.swing.JLabel LConnecte;
     private javax.swing.JLabel LReponse;
     private javax.swing.JTextField TFRequete;
+    private javax.swing.JTable Table;
+    private javax.swing.JScrollPane jScrollPane1;
     // End of variables declaration//GEN-END:variables
 }

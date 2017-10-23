@@ -48,8 +48,10 @@ public class FenAppClient extends javax.swing.JFrame {
             adresse = myGetProperty("config.properties", "IP_SERVEUR");
         }catch(FileNotFoundException e){
             JOptionPane.showMessageDialog(this, "Fichier de config du client non trouvé", "Warning", JOptionPane.WARNING_MESSAGE);
+            System.exit(0);
         }catch(IOException e){
             JOptionPane.showMessageDialog(this, "Erreur d'IO: " + e.getLocalizedMessage(), "Warning", JOptionPane.WARNING_MESSAGE);
+            System.exit(0);
         }
         System.out.println("Récupérations d'infos sur le serveur OK");
         
@@ -61,8 +63,10 @@ public class FenAppClient extends javax.swing.JFrame {
             
         }catch(UnknownHostException e){
             System.err.println("Erreur: host non trouvé");
+            System.exit(0);
         }catch(IOException e){
             System.err.println("Erreur d'IO: "+ e.getMessage());
+            System.exit(0);
         }
         System.out.println("Connecté au serveur");
         
@@ -74,11 +78,14 @@ public class FenAppClient extends javax.swing.JFrame {
             oos.writeObject(req);
             oos.flush();
         }catch(NoSuchAlgorithmException e){
-            System.err.println("Erreur, l'algorithme de digest est intoruvable");
+            System.err.println("Erreur, l'algorithme de digest est introuvable");
+            System.exit(0);
         }catch(NoSuchProviderException e){
             System.err.println("Erreur, le security provider est introuvable");
+            System.exit(0);
         }catch(IOException e){
             System.err.println("Erreur d'IO: "+ e.getMessage());
+            System.exit(0);
         }
         System.out.println("Login envoié");
         
@@ -90,8 +97,10 @@ public class FenAppClient extends javax.swing.JFrame {
             System.out.println("Reponse recue: "+ rep.getChargeUtile());
         }catch(ClassNotFoundException e){
             System.err.println("Erreur sur la classe" + e.getMessage());
+            System.exit(0);
         }catch(IOException e){
             System.err.println("Erreur d'IO" + e.getMessage());
+            System.exit(0);
         }
         // Si OK
         if(rep.getCode() == ReponseLUGAP.OK){
@@ -99,7 +108,6 @@ public class FenAppClient extends javax.swing.JFrame {
         }
         else{
             JOptionPane.showMessageDialog(this, "Impossible de se connecter à la base de données", "Warning", JOptionPane.WARNING_MESSAGE);
-            System.exit(1);
         }  
     }
 
@@ -173,7 +181,7 @@ public class FenAppClient extends javax.swing.JFrame {
         
         //envoi de la requete
         try{
-            oos = new ObjectOutputStream(cliSocket.getOutputStream());
+            //oos = new ObjectOutputStream(cliSocket.getOutputStream());
             oos.writeObject(req);
             oos.flush();
         }catch(IOException e){

@@ -22,6 +22,7 @@ public class ThreadClient extends Thread{
     
     public void run(){
         while(!isInterrupted()){
+            
             try{
                 System.out.println("Thread client avant get");
                 tacheEnCours = tachesAExecuter.getTache();

@@ -9,9 +9,10 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 import java.security.*;
-import java.sql.Connection;
+import java.sql.*;
 import requetepoolthreads.*;
 import static myutils.MyCrypto.*;
+import myutils.MyDBUtils;
 
 /**
  *
@@ -21,6 +22,7 @@ public class RequeteLUGAP implements Requete, Serializable{
 
     public static int LOGIN = 1;
     public static int TEST = 0;
+    public static int LOGOUT = 10;
     
     private int type;
     private String chargeUtile;
@@ -39,22 +41,29 @@ public class RequeteLUGAP implements Requete, Serializable{
     
     @Override
     public Runnable createRunnable(Socket s, ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs) {
-        if(type == TEST){
-            return new Runnable(){
-                public void run(){
-                    traiteRequeteTest(oos, ois, con, cs);
-                }
-            };
-        }
-        else if(type == LOGIN){
-            return new Runnable(){
-                public void run(){
-                    traiteRequeteLogin(oos, ois, con, cs);
-                }
-            };
+        do
+        {
+            if(type == TEST){
+                return new Runnable(){
+                    public void run(){
+                        System.out.println("Traitement requête Test");
+                        traiteRequeteTest(oos, ois, con, cs);
+                    }
+                };
+            }
+            else if(type == LOGIN){
+                return new Runnable(){
+                    public void run(){
+                        System.out.println("Traitement requête Login");
+                        traiteRequeteLogin(oos, ois, con, cs);
+                    }
+                };
 
-        }else
-            return null;
+            }
+        }
+        while(type != LOGOUT);
+        
+        return null;
     }
     
     private void traiteRequeteTest(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
@@ -86,10 +95,16 @@ public class RequeteLUGAP implements Requete, Serializable{
         double alea = Double.parseDouble(parser.nextToken());
         
         try{
-            String test = createDigestFull(login, "pwd", temps, alea); // à remplacer par une connection au serveur, récup le mot de passe sur base du login
+            String query = "select password from AUTHENTICATION where login like '" + login +"';";
+            ResultSet rs = MyDBUtils.MySelect(query, con);
+            rs.next();
+            System.out.println("Mot de passe récupéré : " + rs.getString("password"));
+            String test = createDigestFull(login, rs.getString(1), temps, alea); // à remplacer par une connection au serveur, récup le mot de passe sur base du login
             bool = compareDigest(digest, test);
         }catch(NoSuchAlgorithmException | NoSuchProviderException | IOException e){
             System.out.println("Erreur !");
+        }catch(SQLException ex){
+            System.out.println("Erreur SQL ! :" + ex.getLocalizedMessage());
         }
 
         if(bool){

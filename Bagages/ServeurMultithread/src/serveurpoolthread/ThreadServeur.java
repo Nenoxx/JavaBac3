@@ -37,7 +37,7 @@ public class ThreadServeur extends Thread {
     public void run(){
         // Crée socket
         try{
-            SSocket = new ServerSocket(port); 
+            SSocket = new ServerSocket(port);
         }catch(IOException e){
             System.err.println("Erreur de port d'écoute : " + e);
             System.exit(1);

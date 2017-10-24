@@ -5,19 +5,23 @@
  */
 package clientpoolthreads;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.table.DefaultTableModel;
 import myutils.MyDBUtils;
 import net.proteanit.sql.DbUtils;
+import protocoleLUGAP.RequeteLUGAP;
 
 /**
  *
  * @author nenoxx
  */
 public class FenLugage extends javax.swing.JDialog {
-
+    private ObjectInputStream ois;
+    private ObjectOutputStream oos;
     /**
      * Creates new form FenLugage
      */
@@ -30,12 +34,18 @@ public class FenLugage extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
         String query = "select * from BAGAGES where substr(numBillet, 1, 3) = " + numVol +";";
-        //ICI : Envoyer une requête au serveur lui demendant un ResultSet sur la query
         try {
             
-            ResultSet rs = null;//??? <- à faire dans le Serveur 
-            Table.setModel(DbUtils.resultSetToTableModel(rs));
-            DefaultTableModel dtm = (DefaultTableModel) Table.getModel();
+            oos = new ObjectOutputStream(s.getOutputStream());
+            ois = new ObjectInputStream(s.getInputStream());
+            
+            //1)Envoyer une requête au serveur lui demandant d'exécuter la requête
+            RequeteLUGAP req = new RequeteLUGAP(RequeteLUGAP.SQLQUERY, query);
+            oos.writeObject(req);
+            oos.flush();
+            //2) On récupère la table renvoyée par le serveur
+            DefaultTableModel dtm = (DefaultTableModel) ois.readObject();
+            Table.setModel(dtm);
             dtm.addColumn("Réceptionné");
             dtm.addColumn("Chargé en soute");
             dtm.addColumn("Vérifié par la douane");

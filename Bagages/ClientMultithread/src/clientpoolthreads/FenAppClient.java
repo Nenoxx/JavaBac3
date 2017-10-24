@@ -5,6 +5,9 @@
  */
 package clientpoolthreads;
 
+import java.awt.Point;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.*;
 import java.net.*;
 import java.security.NoSuchAlgorithmException;
@@ -13,7 +16,11 @@ import protocoleLUGAP.*;
 import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import static myutils.MyPropUtils.myGetProperty;
 import static myutils.MyCrypto.*;
@@ -29,6 +36,7 @@ public class FenAppClient extends javax.swing.JFrame {
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
     private Socket cliSocket;
+    FenAppClient thisGUI = this; //Besoin pour le passer en param dans l'évent MousePressed
     
     /**
      * Creates new form FenAppCLient
@@ -39,7 +47,28 @@ public class FenAppClient extends javax.swing.JFrame {
     
     public FenAppClient(String login, String password){
         initComponents();
+        
         ((DefaultTableModel)Table.getModel()).setRowCount(0);
+        Table.addMouseListener(new MouseAdapter() {
+             public void MouseClicked(java.awt.event.MouseEvent evt){
+                 EventMouseClicked(evt);
+            }
+        });
+        
+        Table.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
+            public void valueChanged(ListSelectionEvent event) {
+                // do some actions here, for example
+                // print first column value from selected row
+                System.out.println("Selected row : " + Table.getSelectedRow());
+            }
+        });
+        
+        Table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        Table.getTableHeader().setReorderingAllowed(false);
+        Table.getTableHeader().setResizingAllowed(false);
+        Table.setSelectionMode(DefaultListSelectionModel.SINGLE_SELECTION);
+        Table.getColumnModel().setColumnSelectionAllowed(false);
+        
         //infos sur le serveur du fichier config
         ois = null;
         oos = null;
@@ -143,6 +172,11 @@ public class FenAppClient extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        Table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                TableMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(Table);
 
         AfficherVolButton.setText("Afficher les vols");
@@ -160,13 +194,16 @@ public class FenAppClient extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 374, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(LReponse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(LConnecte, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
                         .addComponent(AfficherVolButton)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(LConnecte, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 574, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(LReponse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -206,6 +243,29 @@ public class FenAppClient extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_AfficherVolButtonActionPerformed
 
+    private void TableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TableMouseClicked
+       if(evt.getClickCount() == 2)
+        {
+            if(Table.getSelectedRow() != -1){
+                int numVol;
+                String row = (String)Table.getValueAt(Table.getSelectedRow(), 0);
+                if(row.length() < 3)
+                    System.out.println("Erreur dans la récupération des valeurs de la table");
+                else{
+                    numVol = ((Integer)Table.getValueAt(Table.getSelectedRow(), 5));
+                    System.out.println(numVol);
+                    FenLugage fen = new FenLugage(thisGUI, true, numVol, cliSocket);
+                    fen.setVisible(true);
+                }
+            }
+            else
+                System.out.println("Erreur de détection");
+        }
+    }//GEN-LAST:event_TableMouseClicked
+    
+    private void EventMouseClicked(java.awt.event.MouseEvent evt){
+        
+    }
     /**
      * @param args the command line arguments
      */

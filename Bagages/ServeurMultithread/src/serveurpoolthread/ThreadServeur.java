@@ -88,30 +88,8 @@ public class ThreadServeur extends Thread {
             System.out.println("Client Accepté");
             ObjectInputStream ois = null;
             ObjectOutputStream oos = null;
-            try{
-                ois = new ObjectInputStream(CSocket.getInputStream());
-                oos = new ObjectOutputStream(CSocket.getOutputStream());
-            }catch(IOException e){
-                System.err.println("Erreur: "+ e.getMessage());
-            }
             
-            Requete req = null;
-            try{
-                req = (Requete)ois.readObject();
-                System.out.println("Requete lue par le serveur, instance de " + req.getClass().getName());
-            }catch(ClassNotFoundException e){
-                System.err.println("Erreur de definition de classe: "+ e.getMessage());
-            }catch(IOException e){
-                System.err.println("Erreur: "+ e.getMessage());
-            }
             
-            Runnable travail = req.createRunnable(CSocket, oos, ois, con, guiApplication);
-            if(travail != null){
-                tachesAExecuter.recordTache(travail);
-                System.out.println("Travail mis en file d'attente");
-            }
-            else
-                System.out.println("Pas de mise en file");
         }
     }
 }

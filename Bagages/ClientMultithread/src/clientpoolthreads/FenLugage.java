@@ -32,7 +32,7 @@ public class FenLugage extends javax.swing.JDialog {
         //ICI : Envoyer une requête au serveur lui demendant un ResultSet sur la query
         /*try {
             
-            ResultSet rs = MyDBUtils.MySelect(query, con); <- à faire dans le Serveur 
+            ResultSet rs = ??? <- à faire dans le Serveur 
             Table.setModel(DbUtils.resultSetToTableModel(rs));
         } catch (SQLException ex) {
             System.out.println(ex.getLocalizedMessage());

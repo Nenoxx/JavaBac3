@@ -8,6 +8,7 @@ package clientpoolthreads;
 import java.net.Socket;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.swing.table.DefaultTableModel;
 import myutils.MyDBUtils;
 import net.proteanit.sql.DbUtils;
 
@@ -30,13 +31,18 @@ public class FenLugage extends javax.swing.JDialog {
         initComponents();
         String query = "select * from BAGAGES where substr(numBillet, 1, 3) = " + numVol +";";
         //ICI : Envoyer une requête au serveur lui demendant un ResultSet sur la query
-        /*try {
+        try {
             
-            ResultSet rs = ??? <- à faire dans le Serveur 
+            ResultSet rs = null;//??? <- à faire dans le Serveur 
             Table.setModel(DbUtils.resultSetToTableModel(rs));
-        } catch (SQLException ex) {
+            DefaultTableModel dtm = (DefaultTableModel) Table.getModel();
+            dtm.addColumn("Réceptionné");
+            dtm.addColumn("Chargé en soute");
+            dtm.addColumn("Vérifié par la douane");
+            dtm.addColumn("Remarques");
+        } catch (Exception ex) {
             System.out.println(ex.getLocalizedMessage());
-        } */
+        }
         
     }
 

@@ -10,6 +10,7 @@ import java.util.*;
 import java.net.*;
 import java.security.*;
 import java.sql.*;
+import javax.swing.table.DefaultTableModel;
 import requetepoolthreads.*;
 import static myutils.MyCrypto.*;
 import myutils.MyDBUtils;
@@ -146,8 +147,10 @@ public class RequeteLUGAP implements Requete, Serializable{
         String query = getChargeUtile();
         
         try{
-            ResultSet rs = MyDBUtils.MySelect(query, con);
-            oos.writeObject(rs);
+            ResultSet res = MyDBUtils.MySelect(query, con);
+            //On build une JTable temporaire contenant le résultat du ResultSet
+            DefaultTableModel dtm = MyDBUtils.buildTableModel(res);
+            oos.writeObject(dtm);
             oos.flush();
         }catch(IOException e){
             System.out.println("Erreur d'accès au flux d'output: "+ e.getMessage());

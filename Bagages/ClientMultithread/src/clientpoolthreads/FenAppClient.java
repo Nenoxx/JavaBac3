@@ -123,8 +123,6 @@ public class FenAppClient extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        TFRequete = new javax.swing.JTextField();
-        BEnvoyer = new javax.swing.JButton();
         LReponse = new javax.swing.JLabel();
         LConnecte = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -133,13 +131,6 @@ public class FenAppClient extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Application_Bagages");
-
-        BEnvoyer.setText("Envoyer");
-        BEnvoyer.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                BEnvoyerActionPerformed(evt);
-            }
-        });
 
         Table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -174,10 +165,6 @@ public class FenAppClient extends javax.swing.JFrame {
                         .addComponent(LReponse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(LConnecte, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(BEnvoyer)
-                        .addGap(18, 18, 18)
-                        .addComponent(TFRequete))
-                    .addGroup(layout.createSequentialGroup()
                         .addComponent(AfficherVolButton)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -187,62 +174,34 @@ public class FenAppClient extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(LConnecte)
-                .addGap(34, 34, 34)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(BEnvoyer)
-                    .addComponent(TFRequete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(117, 117, 117)
+                        .addGap(180, 180, 180)
                         .addComponent(LReponse))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
+                        .addGap(33, 33, 33)
                         .addComponent(AfficherVolButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(34, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void BEnvoyerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BEnvoyerActionPerformed
-        String chargeUtile = TFRequete.getText();
-        RequeteLUGAP req = null;
-        
-        req = new RequeteLUGAP(RequeteLUGAP.TEST, chargeUtile); 
-        
-        //envoi de la requete
-        try{
-            //oos = new ObjectOutputStream(cliSocket.getOutputStream());
-            oos.writeObject(req);
-            oos.flush();
-        }catch(IOException e){
-            System.err.println("Erreur réseau ? "+ e.getMessage());
-        }
-        System.out.println("Requete envoiée");
-        
-        //lecture de la reponse
-        ReponseLUGAP rep = null;
-        try{
-            rep = (ReponseLUGAP)ois.readObject();
-            System.out.println("Reponse recue: "+ rep.getChargeUtile());
-        }catch(ClassNotFoundException e){
-            System.err.println("Erreur sur la classe" + e.getMessage());
-        }catch(IOException e){
-            System.err.println("Erreur d'IO" + e.getMessage());
-        }
-        LReponse.setText(rep.getChargeUtile());
-    }//GEN-LAST:event_BEnvoyerActionPerformed
-
     private void AfficherVolButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AfficherVolButtonActionPerformed
         String query = "select * from VOLS";
         try {
-            //ICI : Envoyer une requête au serveur pour demander un ResultSet?
-            //ois.readObject() //-> En espérant recevoir un object ResultSet
-            ResultSet rs = MyDBUtils.MySelect(query, con);
-            Table.setModel(DbUtils.resultSetToTableModel(rs));
-        } catch (SQLException ex) {
+            //1) Envoi de la demande au serveur d'exécuter la requête SQL
+            RequeteLUGAP req = new RequeteLUGAP(RequeteLUGAP.SQLQUERY, query);
+            
+            oos.writeObject(req);
+            oos.flush();
+            
+            //2) Attente d'une réponse
+            DefaultTableModel dtm = (DefaultTableModel)ois.readObject();
+            Table.setModel(dtm);
+        } catch (Exception ex) {
             System.out.println(ex.getLocalizedMessage());
         }
     }//GEN-LAST:event_AfficherVolButtonActionPerformed
@@ -284,10 +243,8 @@ public class FenAppClient extends javax.swing.JFrame {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton AfficherVolButton;
-    private javax.swing.JButton BEnvoyer;
     private javax.swing.JLabel LConnecte;
     private javax.swing.JLabel LReponse;
-    private javax.swing.JTextField TFRequete;
     private javax.swing.JTable Table;
     private javax.swing.JScrollPane jScrollPane1;
     // End of variables declaration//GEN-END:variables

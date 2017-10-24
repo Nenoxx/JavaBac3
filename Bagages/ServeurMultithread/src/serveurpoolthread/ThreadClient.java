@@ -5,9 +5,7 @@
  */
 package serveurpoolthread;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.sql.Connection;
 import requetepoolthreads.ConsoleServeur;
@@ -19,61 +17,82 @@ import requetepoolthreads.Requete;
  */
 public class ThreadClient extends Thread{
     private SourceTaches tachesAExecuter;
-    private String nom;
+    private int num;
+    private int numReq;
+    private boolean connecte = false;
+    
     private Socket CSocket = null;
+    
     private ObjectOutputStream oos = null;
     private ObjectInputStream ois = null;
+    
     private Connection con = null;
     private ConsoleServeur cs = null;
-    
-    private Runnable tacheEnCours;
-    
-    public ThreadClient(SourceTaches st, String n){
+        
+    public ThreadClient(SourceTaches st, int n){
         tachesAExecuter = st;
-        nom = n;
+        num = n;
     }
     
+    @Override
     public void run(){
         while(!isInterrupted()){
             
+            try{
+                System.out.println("Thread Client " + num + " avant get");
+                CSocket = tachesAExecuter.getTache();
+            }catch(InterruptedException e){
+                System.err.println("Interruption: " + e.getMessage());
+                System.exit(1);
+            }
+            System.out.println("Thread client " + num + ": prise en charge d'un client");
+            
+            // récupère les flux
             try{
                 ois = new ObjectInputStream(CSocket.getInputStream());
                 oos = new ObjectOutputStream(CSocket.getOutputStream());
             }catch(IOException e){
                 System.err.println("Erreur: "+ e.getMessage());
+                System.exit(1);
             }
-            
+            System.out.println("Thread client " + num + ": Flux ouverts");
             Requete req = null;
-            try{
-                req = (Requete)ois.readObject();
-                System.out.println("Requete lue par le serveur, instance de " + req.getClass().getName());
-            }catch(ClassNotFoundException e){
-                System.err.println("Erreur de definition de classe: "+ e.getMessage());
-            }catch(IOException e){
-                System.err.println("Erreur: "+ e.getMessage());
-            }
+            connecte = true;
+            numReq = 0;
             
-            Runnable travail = req.createRunnable(CSocket, oos, ois, con, cs);
-            if(travail != null){
-                tachesAExecuter.recordTache(travail);
-                System.out.println("Travail mis en file d'attente");
-            }
-            else
-                System.out.println("Pas de mise en file");
-            
-            try{
-                System.out.println("Thread client avant get");
-                tacheEnCours = tachesAExecuter.getTache();
-            }catch(InterruptedException e){
-                System.out.println("Interruption: " + e.getMessage());
-            }
-            System.out.println("Run de TacheEnCours");
-            tacheEnCours.run();
+            // Tant que le client ne se déconnecte pas
+            do{
+                // récupère une requête
+                try{
+                    req = (Requete)ois.readObject();
+                    numReq++;
+                }catch(ClassNotFoundException e){
+                    System.err.println("Erreur de definition de classe: "+ e.getMessage());
+                    System.exit(1);
+                }catch(IOException e){
+                    System.err.println("Erreur: "+ e.getMessage());
+                    connecte = false;
+                }
+                
+                if(connecte){
+                System.out.println("Thread client " + num + ": nouvelle requete " + numReq + " recue");
+                cs.TraceEvenements(CSocket.getRemoteSocketAddress().toString()+"#Nouvelle requête(" + numReq + ")#Thread Client " + num);
+                
+                // crée un runnable travail
+                Runnable travail = req.createRunnable(oos, ois, con, cs);
+                
+                // demande à travail de faire le job de gestion de la requête
+                travail.run();
+                System.out.println("Thread client " + num + ": requete " + numReq + " traitée");
+                }else{
+                    cs.TraceEvenements(CSocket.getRemoteSocketAddress().toString()+"#Client parti#Thread Client " + num);
+                }
+                
+            }while(connecte);
         }
     }
     
-    public void setParameters(Socket s, Connection con, ConsoleServeur cs){
-        CSocket = s;
+    public void setParameters(Connection con, ConsoleServeur cs){
         this.con = con;
         this.cs = cs;
     }

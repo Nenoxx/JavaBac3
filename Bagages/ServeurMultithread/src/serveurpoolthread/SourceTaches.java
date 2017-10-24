@@ -5,12 +5,15 @@
  */
 package serveurpoolthread;
 
+import java.net.Socket;
+import java.sql.Connection;
+
 /**
  *
  * @author Arnaud
  */
 public interface SourceTaches {
-    public Runnable getTache() throws InterruptedException;
+    public Socket getTache() throws InterruptedException;
     public boolean existTaches();
-    public void recordTache(Runnable r);
+    public void recordTache(Socket s);
 }

@@ -5,32 +5,36 @@
  */
 package serveurpoolthread;
 
+import java.net.Socket;
 import java.util.*;
 /**
  *
  * @author Arnaud
  */
 public class ListeTaches implements SourceTaches{
-    private LinkedList listeTaches;
+    private LinkedList<Socket> listeTaches;
     
     public ListeTaches(){
         listeTaches = new LinkedList();
     }
     
-    public synchronized Runnable getTache() throws InterruptedException{
+    @Override
+    public synchronized Socket getTache() throws InterruptedException{
         System.out.println("getTache avant wait");
         while(!existTaches()){
             wait();
         }
-        return (Runnable) listeTaches.remove();
+        return listeTaches.remove();
     }
     
+    @Override
     public synchronized boolean existTaches(){
         return !listeTaches.isEmpty();
     }
     
-    public synchronized void recordTache(Runnable r){
-        listeTaches.addLast(r);
+    @Override
+    public synchronized void recordTache(Socket s){
+        listeTaches.addLast(s);
         System.out.println("ListeTaches : tache dans la file");
         notify();
     }

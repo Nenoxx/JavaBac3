@@ -7,13 +7,9 @@ package serveurpoolthread;
 
 import java.net.*;
 import java.io.*;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.sql.*;
-import static myutils.MyCrypto.*;
 import static myutils.MyDBUtils.MyConnection;
 import requetepoolthreads.ConsoleServeur;
-import requetepoolthreads.Requete;
 import static myutils.MyPropUtils.myGetProperty;
 
 /**
@@ -34,12 +30,14 @@ public class ThreadServeur extends Thread {
         guiApplication = cs;
     }
     
+    @Override
     public void run(){
+        
         // Crée socket
         try{
             SSocket = new ServerSocket(port);
         }catch(IOException e){
-            System.err.println("Erreur de port d'écoute : " + e);
+            System.err.println("Thread Serveur: Erreur de port d'écoute : " + e);
             System.exit(1);
         }
         
@@ -50,17 +48,11 @@ public class ThreadServeur extends Thread {
             loginBD = myGetProperty("config.properties", "LOGIN");
             pwdBD = myGetProperty("config.properties", "PASSWORD");
         }catch(FileNotFoundException e){
-            System.err.println("Erreur: fichier properties non trouvé");
+            System.err.println("Thread Serveur: Erreur: fichier properties non trouvé");
             System.exit(1);
         }catch(IOException e){
-            System.err.println("Erreur d'IO: "+ e.getMessage());
+            System.err.println("Thread Serveur: Erreur d'IO: "+ e.getMessage());
             System.exit(1);
-        }
-        
-        // Crée les threads
-        for(int i=0; i < nbThreads; i++){
-            ThreadClient thr = new ThreadClient (tachesAExecuter, "Thread du pool n°" + String.valueOf(i));
-            thr.start();
         }
         
         // Connexion à la base de données
@@ -68,28 +60,31 @@ public class ThreadServeur extends Thread {
         try{
             con = MyConnection(1, loginBD , pwdBD);
         }catch(SQLException e){
-            System.err.println("Erreur de connexion à la base de données: "+ e.getMessage());
+            System.err.println("Thread Serveur: Erreur de connexion à la base de données: "+ e.getMessage());
             System.exit(1);
+        }
+        
+        // Crée les threads
+        for(int i=0; i < nbThreads; i++){
+            ThreadClient thr = new ThreadClient (tachesAExecuter, i+1);
+            thr.setParameters(con, guiApplication);
+            thr.start();
         }
         
         // Attente d'une connexion
         Socket CSocket = null;
         while(!isInterrupted()){
             try{
-                System.out.println("------- Serveur en attente");
+                System.out.println("------- Serveur en attente -------");
                 CSocket = SSocket.accept();
-                guiApplication.TraceEvenements(CSocket.getRemoteSocketAddress().toString() + "#accept#Thread Serveur");
+                guiApplication.TraceEvenements(CSocket.getRemoteSocketAddress().toString() + "#Nouveau client accepté#Thread Serveur");
             }catch(IOException e){
-                System.err.println("Erreur d'accept : " + e.getMessage());
+                System.err.println("Thread Serveur: Erreur d'accept : " + e.getMessage());
                 System.exit(1);
             }
             
-            // Client connecté
-            System.out.println("Client Accepté");
-            ObjectInputStream ois = null;
-            ObjectOutputStream oos = null;
-            
-            
+            // signale qu'une nouvelle tâche est disponible
+            tachesAExecuter.recordTache(CSocket);
         }
     }
 }

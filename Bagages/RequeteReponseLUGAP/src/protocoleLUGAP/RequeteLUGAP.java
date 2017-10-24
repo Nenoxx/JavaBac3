@@ -20,10 +20,11 @@ import myutils.MyDBUtils;
  */
 public class RequeteLUGAP implements Requete, Serializable{
 
-    public static int LOGIN = 1;
     public static int TEST = 0;
-    public static int SQLQUERY = 2;
-    public static int LOGOUT = 10;
+    public static int LOGIN = 1;
+    public static int LOGOUT = 2;
+    public static int SQLQUERY = 3;
+    
     
     private int type;
     private String chargeUtile;
@@ -41,48 +42,50 @@ public class RequeteLUGAP implements Requete, Serializable{
     }
     
     @Override
-    public Runnable createRunnable(Socket s, ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs) {
-        do
-        {
-            if(type == TEST){
-                return new Runnable(){
-                    public void run(){
-                        System.out.println("Traitement requête Test");
-                        traiteRequeteTest(oos, ois, con, cs);
-                    }
-                };
-            }
-            else if(type == LOGIN){
-                return new Runnable(){
-                    public void run(){
-                        System.out.println("Traitement requête Login");
-                        traiteRequeteLogin(oos, ois, con, cs);
-                    }
-                };
-
-            }
-            else if (type == SQLQUERY){
-                return new Runnable(){
-                    public void run(){
-                        System.out.println("Traitement de requête SQL");
-                        traiteRequeteSQL(oos, ois, con, cs);
-                    }
-                };
-            }
+    public Runnable createRunnable(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs) {
+       
+        if(type == TEST){
+            return new Runnable(){
+                public void run(){
+                    System.out.println("Traitement requête Test");
+                    traiteRequeteTest(oos, ois, con, cs);
+                }
+            };
         }
-        while(type != LOGOUT);
-        
+        else if(type == LOGIN){
+            return new Runnable(){
+                public void run(){
+                    System.out.println("Traitement requête Login");
+                    traiteRequeteLogin(oos, ois, con, cs);
+                }
+            };
+
+        }
+        else if (type == LOGOUT){
+            return new Runnable(){
+                public void run(){
+                    System.out.println("Traitement de requête Logout");
+                    traiteRequeteLogout(oos, ois, con, cs);
+                }
+            };
+        }
+        else if (type == SQLQUERY){
+            return new Runnable(){
+                public void run(){
+                    System.out.println("Traitement de requête SQL");
+                    traiteRequeteSQL(oos, ois, con, cs);
+                }
+            };
+        }
+
         return null;
     }
     
     private void traiteRequeteTest(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
-        System.out.println("Debut de traiteRequeteTest");
-        System.out.println("Recu: [" + getChargeUtile() + "]");
+        System.out.println("traiteRequeteTest: recu: [" + getChargeUtile() + "]");
         ReponseLUGAP rep = new ReponseLUGAP(ReponseLUGAP.OK, getChargeUtile() + " OK");
         
-        //ObjectOutputStream oos;
         try{
-            //oos = new ObjectOutputStream(s.getOutputStream());
             oos.writeObject(rep);
             oos.flush();
         }catch(IOException e){
@@ -92,7 +95,7 @@ public class RequeteLUGAP implements Requete, Serializable{
     
     private void traiteRequeteLogin(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
         boolean bool = false;
-        //ObjectOutputStream oos;
+        
         String digest = getChargeUtile();
         ReponseLUGAP rep = null;
         
@@ -108,7 +111,7 @@ public class RequeteLUGAP implements Requete, Serializable{
             ResultSet rs = MyDBUtils.MySelect(query, con);
             rs.next();
             System.out.println("Mot de passe récupéré : " + rs.getString("password"));
-            String test = createDigestFull(login, rs.getString(1), temps, alea); // à remplacer par une connection au serveur, récup le mot de passe sur base du login
+            String test = createDigestFull(login, rs.getString(1), temps, alea);
             bool = compareDigest(digest, test);
         }catch(NoSuchAlgorithmException | NoSuchProviderException | IOException e){
             System.out.println("Erreur !");
@@ -125,7 +128,6 @@ public class RequeteLUGAP implements Requete, Serializable{
         }
 
         try{
-            //oos = new ObjectOutputStream(s.getOutputStream());
             oos.writeObject(rep);
             oos.flush();
         }catch(IOException e){
@@ -133,17 +135,18 @@ public class RequeteLUGAP implements Requete, Serializable{
         }
     }
     
+    private void traiteRequeteLogout(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
+        System.out.println("traiteRequeteLogout");
+                
+    }
+    
     private void traiteRequeteSQL(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
-        System.out.println("Debut de traiteRequeteTest");
-        System.out.println("Recu: [" + getChargeUtile() + "]");
+        System.out.println("traiteRequeteSQL: recu: [" + getChargeUtile() + "]");
         ReponseLUGAP rep = new ReponseLUGAP(ReponseLUGAP.OK, getChargeUtile() + " OK");
         String query = getChargeUtile();
         
-        
-        //ObjectOutputStream oos;
         try{
             ResultSet rs = MyDBUtils.MySelect(query, con);
-            //oos = new ObjectOutputStream(s.getOutputStream());
             oos.writeObject(rs);
             oos.flush();
         }catch(IOException e){
@@ -158,5 +161,8 @@ public class RequeteLUGAP implements Requete, Serializable{
     }
     public void setChargeUtile(String charge){
         chargeUtile = charge;
-    }    
+    } 
+    public int getType(){
+        return type;
+    }
 }

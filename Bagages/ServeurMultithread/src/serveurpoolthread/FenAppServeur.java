@@ -6,9 +6,7 @@
 package serveurpoolthread;
 
 import java.util.*;
-import javax.swing.*;
 import javax.swing.table.*;
-import java.net.*;
 import java.io.*;
 import requetepoolthreads.ConsoleServeur;
 import static myutils.MyPropUtils.myGetProperty;
@@ -50,13 +48,10 @@ public class FenAppServeur extends javax.swing.JFrame implements ConsoleServeur 
 
         TableauEvenements.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
+
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
+                "Qui ?", "Quoi ?", "Ou ?"
             }
         ));
         ScrollPaneTableauEvenements.setViewportView(TableauEvenements);
@@ -128,11 +123,7 @@ public class FenAppServeur extends javax.swing.JFrame implements ConsoleServeur 
         PortLabel.setText("Port: " + port);
         TraceEvenements("Serveur#Port obtenu#Main");
         ThreadServeur ts = new ThreadServeur(port, new ListeTaches(), this);
-        ts.start();
-        
-        
-        
-        
+        ts.start();        
     }//GEN-LAST:event_BStartActionPerformed
 
     private void BStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BStopActionPerformed

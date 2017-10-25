@@ -10,6 +10,8 @@ import java.util.*;
 import java.net.*;
 import java.security.*;
 import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.table.DefaultTableModel;
 import requetepoolthreads.*;
 import static myutils.MyCrypto.*;
@@ -25,6 +27,7 @@ public class RequeteLUGAP implements Requete, Serializable{
     public static int LOGIN = 1;
     public static int LOGOUT = 2;
     public static int SQLQUERY = 3;
+    public static int UPDATE = 4;
     
     
     private int type;
@@ -78,6 +81,14 @@ public class RequeteLUGAP implements Requete, Serializable{
                 }
             };
         }
+        else if (type == UPDATE){
+            return new Runnable(){
+                public void run(){
+                    System.out.println("Traitement de requête Update");
+                    traiteRequeteUpdate(oos, ois, con, cs);
+                }
+            };
+        }
 
         return null;
     }
@@ -108,7 +119,7 @@ public class RequeteLUGAP implements Requete, Serializable{
         double alea = Double.parseDouble(parser.nextToken());
         
         try{
-            String query = "select password from AUTHENTICATION where login like '" + login +"';";
+            String query = "select password from AGENTS where login like '" + login +"' and role = 'Bagagiste';";
             ResultSet rs = MyDBUtils.MySelect(query, con);
             rs.next();
             System.out.println("Mot de passe récupéré : " + rs.getString("password"));
@@ -138,7 +149,14 @@ public class RequeteLUGAP implements Requete, Serializable{
     
     private void traiteRequeteLogout(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
         System.out.println("traiteRequeteLogout");
-                
+        ReponseLUGAP rep = new ReponseLUGAP(ReponseLUGAP.OK, "Au revoir");     
+        
+        try{
+            oos.writeObject(rep);
+            oos.flush();
+        }catch(IOException e){
+            System.out.println("Erreur d'accès au flux d'output: "+ e.getMessage());
+        }
     }
     
     private void traiteRequeteSQL(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
@@ -159,6 +177,37 @@ public class RequeteLUGAP implements Requete, Serializable{
         }
         
     }
+    
+    private void traiteRequeteUpdate(ObjectOutputStream oos, ObjectInputStream ois, Connection con, ConsoleServeur cs){
+        PreparedStatement pStmt;
+        
+        // récup champs recus
+        StringTokenizer parser = new StringTokenizer(getChargeUtile(), "|");
+        String numBag = parser.nextToken();
+        String recep = parser.nextToken();
+        String charge = parser.nextToken();
+        String verif = parser.nextToken();
+        String rem = parser.nextToken();
+        
+        
+        try {
+            pStmt = con.prepareStatement("update BAGAGES set reception = ?, charge = ?, verifie = ?, remarque = ? where numBagage = ?;");
+        
+            pStmt.setString(1, recep);
+            pStmt.setString(2, charge);
+            pStmt.setString(3, verif);
+            pStmt.setString(4, rem);
+            pStmt.setString(5, numBag);
+            pStmt.executeUpdate();
+        } catch (SQLException ex) {
+            Logger.getLogger(RequeteLUGAP.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+        
+    }
+    
+    
     public String getChargeUtile(){
         return chargeUtile;
     }

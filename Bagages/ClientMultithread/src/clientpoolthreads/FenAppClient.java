@@ -157,6 +157,8 @@ public class FenAppClient extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         Table = new javax.swing.JTable();
         AfficherVolButton = new javax.swing.JButton();
+        QuitterButton = new javax.swing.JButton();
+        BagagesButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Application_Bagages");
@@ -172,6 +174,8 @@ public class FenAppClient extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        Table.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        Table.setRowSelectionAllowed(true);
         Table.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 TableMouseClicked(evt);
@@ -186,6 +190,20 @@ public class FenAppClient extends javax.swing.JFrame {
             }
         });
 
+        QuitterButton.setText("Quitter");
+        QuitterButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                QuitterButtonActionPerformed(evt);
+            }
+        });
+
+        BagagesButton.setText("Bagages");
+        BagagesButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                BagagesButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -195,21 +213,27 @@ public class FenAppClient extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(AfficherVolButton)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(LConnecte, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(BagagesButton)
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addGroup(layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(QuitterButton))
+                            .addComponent(LConnecte, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 574, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(0, 0, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(LReponse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addComponent(LReponse, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
+                .addComponent(QuitterButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(LConnecte)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
@@ -217,10 +241,12 @@ public class FenAppClient extends javax.swing.JFrame {
                         .addComponent(LReponse))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(33, 33, 33)
-                        .addComponent(AfficherVolButton)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(AfficherVolButton)
+                            .addComponent(BagagesButton))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 228, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(34, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -246,6 +272,7 @@ public class FenAppClient extends javax.swing.JFrame {
     private void TableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_TableMouseClicked
        if(evt.getClickCount() == 2)
         {
+            System.out.println("Doouble-click détecté");
             if(Table.getSelectedRow() != -1){
                 int numVol;
                 String row = (String)Table.getValueAt(Table.getSelectedRow(), 0);
@@ -254,7 +281,7 @@ public class FenAppClient extends javax.swing.JFrame {
                 else{
                     numVol = ((Integer)Table.getValueAt(Table.getSelectedRow(), 5));
                     System.out.println(numVol);
-                    FenLugage fen = new FenLugage(thisGUI, true, numVol, cliSocket);
+                    FenLugage fen = new FenLugage(thisGUI, true, numVol, oos, ois);
                     fen.setVisible(true);
                 }
             }
@@ -262,6 +289,48 @@ public class FenAppClient extends javax.swing.JFrame {
                 System.out.println("Erreur de détection");
         }
     }//GEN-LAST:event_TableMouseClicked
+
+    private void QuitterButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_QuitterButtonActionPerformed
+        try {
+            //1) Envoi de la demande au serveur d'exécuter la requête SQL
+            RequeteLUGAP req = new RequeteLUGAP(RequeteLUGAP.LOGOUT, "Déconnexion");
+            
+            oos.writeObject(req);
+            oos.flush();
+            
+            //2) Attente d'une réponse
+            ReponseLUGAP rep = (ReponseLUGAP) ois.readObject();
+        
+            // Si OK
+            if(rep.getCode() == ReponseLUGAP.OK){
+                JOptionPane.showMessageDialog(this, "Vous êtes déconnecté", "Info", JOptionPane.INFORMATION_MESSAGE);            }
+            else{
+                JOptionPane.showMessageDialog(this, "Erreur lors de la déconnection", "Erreur", JOptionPane.ERROR_MESSAGE);
+            } 
+        }catch(IOException e){
+            System.err.println("Erreur d'IO: "+ e.getMessage());
+        }catch(ClassNotFoundException e){
+            System.err.println("Classe non trouvée: "+ e.getMessage());
+        }
+        System.exit(0);
+    }//GEN-LAST:event_QuitterButtonActionPerformed
+
+    private void BagagesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BagagesButtonActionPerformed
+        if(Table.getSelectedRow() != -1){
+            int numVol;
+            String row = (String)Table.getValueAt(Table.getSelectedRow(), 0);
+            if(row.length() < 3)
+                System.out.println("Erreur dans la récupération des valeurs de la table");
+            else{
+                numVol = ((Integer)Table.getValueAt(Table.getSelectedRow(), 5));
+                System.out.println(numVol);
+                FenLugage fen = new FenLugage(thisGUI, true, numVol, oos, ois);
+                fen.setVisible(true);
+            }
+        }
+        else
+            JOptionPane.showMessageDialog(this, "Un vol doit être sélectionné", "Info", JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_BagagesButtonActionPerformed
     
     private void EventMouseClicked(java.awt.event.MouseEvent evt){
         
@@ -303,8 +372,10 @@ public class FenAppClient extends javax.swing.JFrame {
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton AfficherVolButton;
+    private javax.swing.JButton BagagesButton;
     private javax.swing.JLabel LConnecte;
     private javax.swing.JLabel LReponse;
+    private javax.swing.JButton QuitterButton;
     private javax.swing.JTable Table;
     private javax.swing.JScrollPane jScrollPane1;
     // End of variables declaration//GEN-END:variables

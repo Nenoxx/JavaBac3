@@ -5,11 +5,14 @@
  */
 package clientpoolthreads;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.table.DefaultTableModel;
 import myutils.MyDBUtils;
 import net.proteanit.sql.DbUtils;
@@ -30,14 +33,14 @@ public class FenLugage extends javax.swing.JDialog {
         initComponents();
     }
     
-    public FenLugage(java.awt.Frame parent, boolean modal, int numVol, Socket s){
+    public FenLugage(java.awt.Frame parent, boolean modal, int numVol, ObjectOutputStream oos, ObjectInputStream ois){
         super(parent, modal);
         initComponents();
         String query = "select * from BAGAGES where substr(numBillet, 1, 3) = " + numVol +";";
         try {
             
-            oos = new ObjectOutputStream(s.getOutputStream());
-            ois = new ObjectInputStream(s.getInputStream());
+            this.oos = oos;
+            this.ois = ois;
             
             //1)Envoyer une requête au serveur lui demandant d'exécuter la requête
             RequeteLUGAP req = new RequeteLUGAP(RequeteLUGAP.SQLQUERY, query);
@@ -46,14 +49,9 @@ public class FenLugage extends javax.swing.JDialog {
             //2) On récupère la table renvoyée par le serveur
             DefaultTableModel dtm = (DefaultTableModel) ois.readObject();
             Table.setModel(dtm);
-            dtm.addColumn("Réceptionné");
-            dtm.addColumn("Chargé en soute");
-            dtm.addColumn("Vérifié par la douane");
-            dtm.addColumn("Remarques");
-        } catch (Exception ex) {
+        } catch (IOException | ClassNotFoundException ex) {
             System.out.println(ex.getLocalizedMessage());
         }
-        
     }
 
     /**
@@ -67,7 +65,8 @@ public class FenLugage extends javax.swing.JDialog {
 
         jScrollPane1 = new javax.swing.JScrollPane();
         Table = new javax.swing.JTable();
-        jButton1 = new javax.swing.JButton();
+        OkButton = new javax.swing.JButton();
+        AnnulerButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -84,7 +83,19 @@ public class FenLugage extends javax.swing.JDialog {
         ));
         jScrollPane1.setViewportView(Table);
 
-        jButton1.setText("OK");
+        OkButton.setText("OK");
+        OkButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                OkButtonActionPerformed(evt);
+            }
+        });
+
+        AnnulerButton.setText("Annuler");
+        AnnulerButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                AnnulerButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -96,7 +107,9 @@ public class FenLugage extends javax.swing.JDialog {
                 .addContainerGap(13, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(AnnulerButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(OkButton, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -105,12 +118,38 @@ public class FenLugage extends javax.swing.JDialog {
                 .addContainerGap()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(jButton1)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(OkButton)
+                    .addComponent(AnnulerButton))
                 .addContainerGap(14, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void OkButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_OkButtonActionPerformed
+        String msg = Table.getValueAt(Table.getSelectedRow(), 1).toString();
+        msg = msg + "|" + Table.getValueAt(Table.getSelectedRow(), 4).toString();
+        msg = msg + "|" + Table.getValueAt(Table.getSelectedRow(), 5).toString();
+        msg = msg + "|" + Table.getValueAt(Table.getSelectedRow(), 6).toString();
+        msg = msg + "|" + Table.getValueAt(Table.getSelectedRow(), 7).toString();
+            
+        System.out.println("msg: " + msg);
+        
+        //1)Envoyer une requête au serveur lui demandant d'exécuter la requête
+        RequeteLUGAP req = new RequeteLUGAP(RequeteLUGAP.UPDATE, msg);
+        try {
+            oos.writeObject(req);
+            oos.flush();
+        } catch (IOException ex) {
+            Logger.getLogger(FenLugage.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }//GEN-LAST:event_OkButtonActionPerformed
+
+    private void AnnulerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AnnulerButtonActionPerformed
+        this.dispose();
+    }//GEN-LAST:event_AnnulerButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -155,8 +194,9 @@ public class FenLugage extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton AnnulerButton;
+    private javax.swing.JButton OkButton;
     private javax.swing.JTable Table;
-    private javax.swing.JButton jButton1;
     private javax.swing.JScrollPane jScrollPane1;
     // End of variables declaration//GEN-END:variables
 }

@@ -154,7 +154,7 @@ public class FenLugage extends javax.swing.JDialog {
             }
             else{
                 JOptionPane.showMessageDialog(this, "La mise a jour a été correctement effectuée", "Success", JOptionPane.INFORMATION_MESSAGE);
-                this.setVisible(false);
+                //this.setVisible(false);
             }
         } catch (IOException ex) {
             Logger.getLogger(FenLugage.class.getName()).log(Level.SEVERE, null, ex);

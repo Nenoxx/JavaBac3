@@ -13,9 +13,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import myutils.MyDBUtils;
 import net.proteanit.sql.DbUtils;
+import protocoleLUGAP.ReponseLUGAP;
 import protocoleLUGAP.RequeteLUGAP;
 
 /**
@@ -103,13 +105,13 @@ public class FenLugage extends javax.swing.JDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(13, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(AnnulerButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(OkButton, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 405, Short.MAX_VALUE)
+                        .addComponent(AnnulerButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(OkButton, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane1))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -141,7 +143,22 @@ public class FenLugage extends javax.swing.JDialog {
         try {
             oos.writeObject(req);
             oos.flush();
+            
+            //2) Attente d'une réponse
+            ReponseLUGAP repR = (ReponseLUGAP)ois.readObject();
+            String rep = repR.getChargeUtile();
+            
+            if(rep.equals("NOK"))
+            {
+                JOptionPane.showMessageDialog(this, "Erreur lors de la mise à jour de la base de donnée", "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+            else{
+                JOptionPane.showMessageDialog(this, "La mise a jour a été correctement effectuée", "Success", JOptionPane.INFORMATION_MESSAGE);
+                this.setVisible(false);
+            }
         } catch (IOException ex) {
+            Logger.getLogger(FenLugage.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
             Logger.getLogger(FenLugage.class.getName()).log(Level.SEVERE, null, ex);
         }
         

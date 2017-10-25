@@ -188,6 +188,7 @@ public class RequeteLUGAP implements Requete, Serializable{
         String charge = parser.nextToken();
         String verif = parser.nextToken();
         String rem = parser.nextToken();
+        ReponseLUGAP rep = null;
         
         
         try {
@@ -199,8 +200,18 @@ public class RequeteLUGAP implements Requete, Serializable{
             pStmt.setString(4, rem);
             pStmt.setString(5, numBag);
             pStmt.executeUpdate();
+            rep = new ReponseLUGAP(ReponseLUGAP.OK, "OK");
         } catch (SQLException ex) {
             Logger.getLogger(RequeteLUGAP.class.getName()).log(Level.SEVERE, null, ex);
+            rep = new ReponseLUGAP(ReponseLUGAP.NOK, "NOK");
+          }
+        
+        try{
+            oos.writeObject(rep);
+            oos.flush();
+        }
+        catch(IOException ex) {
+            System.out.println(ex.getLocalizedMessage());
         }
         
         

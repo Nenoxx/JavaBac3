@@ -48,12 +48,14 @@ public class FenAppClient extends javax.swing.JFrame {
     public FenAppClient(String login, String password){
         initComponents();
         
+        /*
         ((DefaultTableModel)Table.getModel()).setRowCount(0);
         Table.addMouseListener(new MouseAdapter() {
              public void MouseClicked(java.awt.event.MouseEvent evt){
                  EventMouseClicked(evt);
             }
         });
+        */
         
         Table.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
             public void valueChanged(ListSelectionEvent event) {

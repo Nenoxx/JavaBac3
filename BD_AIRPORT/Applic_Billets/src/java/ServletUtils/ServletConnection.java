@@ -47,51 +47,51 @@ public class ServletConnection extends HttpServlet {
                 out.println("<title>test</title>");            
                 out.println("</head>");
                 out.println("<body>");
-             //PrintWriter out = response.getWriter();
-             String user = request.getParameter("login");
-             String pass = request.getParameter("password");
-             String newClient = request.getParameter("inscription");
-             //out.println("new client? " + newClient);
-             //out.println("<br/>");
-             try {
-                 Class.forName("com.mysql.jdbc.Driver");
-                 Connection conn = MyDBUtils.MyConnection(1, "root", "root");
-                 if(newClient == null) //Client déjà existant
-                 {
-                    PreparedStatement pst = conn.prepareStatement("Select login, password from AUTHENTICATION where login=? and password=?");
-                    pst.setString(1, user);
-                    pst.setString(2, pass);
-                    ResultSet rs = pst.executeQuery();
-                    if (rs.next()) {
-                        out.println("Correct login credentials");
-                        //redirect sur JSP site
-                    } 
-                    else {
-                        out.println("Incorrect login credentials");
-                        //redirect sur la page de login avec message d'erreur
-                        request.setAttribute("errorMessage", "badlogin");
-                        this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
+                
+                //On récupère les attributs (cachés) envoyé après avoir appuyé sur "Connexion"
+                String user = request.getParameter("login");
+                String pass = request.getParameter("password");
+                String newClient = request.getParameter("inscription"); //<- est null si le client n'a pas coché la checkbox
+                try {
+                    //Connexion à la BD MySQL
+                    Class.forName("com.mysql.jdbc.Driver");
+                    Connection conn = MyDBUtils.MyConnection(1, "root", "root");
+                    if(newClient == null) //Client déjà existant
+                    {
+                       PreparedStatement pst = conn.prepareStatement("Select login, password from AUTHENTICATION where login=? and password=?");
+                       pst.setString(1, user);
+                       pst.setString(2, pass);
+                       ResultSet rs = pst.executeQuery();
+                       if (rs.next()) {
+                           //Si le resultset contient un tuple, c'est que le select a donné un résultat positif
+                           out.println("Correct login credentials");
+                           this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                       } 
+                       else {
+                           out.println("Incorrect login credentials");
+                           //redirect sur la page de login avec message d'erreur
+                           request.setAttribute("errorMessage", "badlogin");
+                           this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
+                       }
                     }
-                 }
-                 else{
-                    //out.println("ENTREE ELSE");
-                    PreparedStatement pst = conn.prepareStatement("insert into AUTHENTICATION values ('"+user+"','"+pass+"');");
-                    out.println("<br/>");
-                    //out.println("executed insert : " + pst);
-                    int res = pst.executeUpdate();
-                    if(res > 0){
-                        out.println("New user " + user + " was successfully created");
-                        //redirect JSP site
+                    else{
+                       PreparedStatement pst = conn.prepareStatement("insert into AUTHENTICATION values ('"+user+"','"+pass+"');");
+                       out.println("<br/>");
+                       int res = pst.executeUpdate();
+                       if(res > 0){
+                           //Nouveau client correctement créé -> On redirect comme pour une connexion normale
+                           out.println("New user " + user + " was successfully created");
+                           this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                       }
+                       else
+                           out.println("Error while creating new user " + user);
                     }
-                    else
-                        out.println("Error while creating new user " + user);
-                 }
-             } 
-             catch (ClassNotFoundException | SQLException e) {
-                 System.out.println("ERROR : " + e.getLocalizedMessage());
-             }
-            out.println("</body>");
-            out.println("</html>");
+                } 
+                catch (ClassNotFoundException | SQLException e) {
+                    System.out.println("ERROR : " + e.getLocalizedMessage());
+                }
+               out.println("</body>");
+               out.println("</html>");
         }
     }
 

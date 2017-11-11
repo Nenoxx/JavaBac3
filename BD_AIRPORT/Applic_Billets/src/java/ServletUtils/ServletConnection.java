@@ -12,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -70,10 +71,10 @@ public class ServletConnection extends HttpServlet {
                            out.println("Correct login credentials");
                            request.setAttribute("login", "");
                            request.setAttribute("password", "");
-                           if(user.equals("admin") && pass.equals("admin")) 
-// à changer, faire une requête pour récupérer le mot de passe de "admin" au cas où l'admin voudrait changer son mdp. P-e plus tard.
+                           if(user.equals("admin")){
                                this.getServletContext().getRequestDispatcher("/JSPAdmin.jsp").forward(request, response);
-                           else
+                               
+                           }else
                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
                        } 
                        else {

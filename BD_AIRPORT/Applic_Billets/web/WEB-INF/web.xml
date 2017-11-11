@@ -8,9 +8,17 @@
             <param-value>MySQL</param-value>
         </init-param>
     </servlet>
+    <servlet>
+        <servlet-name>ServletAdmin</servlet-name>
+        <servlet-class>ServletUtils.ServletAdmin</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>ServletConnection</servlet-name>
         <url-pattern>/ServletConnection</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ServletAdmin</servlet-name>
+        <url-pattern>/ServletAdmin</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>

@@ -9,13 +9,11 @@ import databaseUtils.MyDBUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,9 +22,14 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author nenoxx
  */
+
+@WebServlet(
+       name = "ServletConnection",
+       displayName = "Connection handling Servlet",
+       urlPatterns = "/ServletConnection"
+)
 public class ServletConnection extends HttpServlet {
     
-    private int cpt = 0;
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -55,7 +58,7 @@ public class ServletConnection extends HttpServlet {
                 try {
                     //Connexion à la BD MySQL
                     Class.forName("com.mysql.jdbc.Driver");
-                    Connection conn = MyDBUtils.MyConnection(1, "root", "root");
+                    Connection conn = MyDBUtils.MyConnection(1, "mich", "password"); //Compte ne pouvant faire que des select et insert
                     if(newClient == null) //Client déjà existant
                     {
                        PreparedStatement pst = conn.prepareStatement("Select login, password from AUTHENTICATION where login=? and password=?");
@@ -65,7 +68,13 @@ public class ServletConnection extends HttpServlet {
                        if (rs.next()) {
                            //Si le resultset contient un tuple, c'est que le select a donné un résultat positif
                            out.println("Correct login credentials");
-                           this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                           request.setAttribute("login", "");
+                           request.setAttribute("password", "");
+                           if(user.equals("admin") && pass.equals("admin")) 
+// à changer, faire une requête pour récupérer le mot de passe de "admin" au cas où l'admin voudrait changer son mdp. P-e plus tard.
+                               this.getServletContext().getRequestDispatcher("/JSPAdmin.jsp").forward(request, response);
+                           else
+                               this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
                        } 
                        else {
                            out.println("Incorrect login credentials");

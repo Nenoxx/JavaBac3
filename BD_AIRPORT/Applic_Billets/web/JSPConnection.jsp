@@ -1,4 +1,4 @@
-<%-- 
+    <%-- 
     Document   : JSPConnection
     Created on : 9 nov. 2017, 10:41:12
     Author     : nenoxx
@@ -15,7 +15,7 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>  
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cerulean/bootstrap.min.css">
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Inpres Airport</title>
+        <title>INPRES AIRPORT</title>
     </head>
     <body style="background-repeat:no-repeat; background-size: 100% auto" background="http://www.flydayton.com/wp-content/uploads/2015/06/day-home-slide-1-updated.jpg">
         <!-- la belle barre toute blo sur le haut de la page-->
@@ -45,11 +45,11 @@
             <br>
             <label for="password">Password :</label>
             <input type="password" class="form-control" id="mdp" name="password"style="max-width: 200px" placeholder="Entrez le mot de passe">
-            <br>
-            <br>
-            <button type="submit" class="btn btn-warning">Connexion</button>
-            <label for="inscription">Inscription : </label>
+            <label for="inscription">Nouveau client : </label>
             <input type="checkbox" name="inscription" value="Inscription" />
+            <br>
+            <br>
+            <button type="submit" class="btn btn-warning">Connexion</button>      
             </form>  
         </div>
     </div>

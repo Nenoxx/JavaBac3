@@ -47,15 +47,22 @@
                 //On construit un container avec les infos du vol pour chaque vol
                 out.println(""
                 + "<div class=\"VolContainer\" style=\"float:left;\">  "
-                + "<div class=\"VolInfos\" style=\"border: 4px black ridge; border-radius:10px; margin:auto; padding:10px; width:700px;\">  "
-                + "     <h3>Voyage en destination de "+ infos[0] +"</h3>" 
+                + "<div class=\"VolInfos\" style=\"border: 4px black ridge; border-radius:10px; margin:auto; padding:10px; width:700px; background-image:url(vintage-concrete.png);\">  "
+                + "     <h3 style=\"text-shadow: 1px 1px 1px black;\">Voyage en destination de "+ infos[0] +"</h3>" 
                 + "     <p style=\"text-align:left;\"> Vol n°" + infos[1] +"</p>"
-                + "     <p style=\"text-align:right;\"> Nombre de billets :" + infos[2] + "</p>"
+                + "     <p style=\"text-align:left;\"> Places disponibles : " + infos[2]
+                + "     <span style=\"float:right; position:relative; font-size:16px; font-family:Impact, sans-serif;\">" + infos[3] + "€</span> </p>"
                 + "</div>"
+                + "</div>"
+                + "<div class=\"UserInput\" style=\"float:right; text-align:left; margin:auto; width:500px;\">"
+                    + "<label for=\"quantity\">Quantité voulue : </label>"
+                    + "<input type=\"text\" class=\"form-control\" id=\"InputQuantity\" name=\"quantity\" style=\"max-width:200px;\" value=\"0\" placeholder=\"Laissez 0 si vous ne prenez rien.\">"
                 + "</div>");
             }
         %>  
+        </div>  
+        <div class="ButtonRegion" style="float:right; text-align:left; margin: 45px auto; width:500px;"> 
+            <button type="submit" class ="btn btn-warning">Ajouter au panier</button>
         </div>
-        
     </body>
 </html>

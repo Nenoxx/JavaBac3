@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponse;
        urlPatterns = "/ServletConnection"
 )
 public class ServletConnection extends HttpServlet {
-    
+    String[] quantities = null;
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -59,6 +59,10 @@ public class ServletConnection extends HttpServlet {
                     this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
                 }
                 
+                if((quantities = request.getParameterValues("quantity")) != null){
+                    //Calculer les prix par-rapport aux valeurs obtenues
+                }
+                
                 //On récupère les attributs (cachés) envoyé après avoir appuyé sur "Connexion"
                 String user = request.getParameter("login");
                 String pass = request.getParameter("password");
@@ -82,16 +86,21 @@ public class ServletConnection extends HttpServlet {
                                this.getServletContext().getRequestDispatcher("/JSPAdmin.jsp").forward(request, response);
                                
                            }else{
-                               String query = "select destination, numVol, nbreBillets from VOLS;";
+                               String query = "select destination, numVol, nbreBillets, prix from VOLS;";
+                               try{
                                pst = conn.prepareStatement(query);
                                rs = pst.executeQuery();
                                ArrayList<String> list = new ArrayList<String>();
                                while(rs.next()){
-                                   String row = rs.getString("destination") + ";" + rs.getString("numVol") + ";" + rs.getString("nbreBillets");
+                                   String row = rs.getString("destination") + ";" + rs.getString("numVol") + ";" + rs.getString("nbreBillets") + ";" + rs.getString("prix");
                                    list.add(row);
                                }
                                request.setAttribute("ListeVols", list);
                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                               }
+                               catch(Exception ex){
+                                   System.out.println(ex.getLocalizedMessage());
+                               }
                            }
                        } 
                        else {

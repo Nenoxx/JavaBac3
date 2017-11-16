@@ -34,17 +34,23 @@
             <% if(request.getAttribute("errorMessage") != null) {  
                  if(request.getAttribute("errorMessage").equals("badlogin")) {%>
                     <font color ="red"> Le login ou le mot de passe est incorrect </font>
-                <% } %>
-        <% } %>
+                <% }
+                if(request.getAttribute("errorMessage").equals("loginexists")){ %>
+                    <font color ="red"> Ce compte existe déjà </font>
+                <% } 
+                if(request.getAttribute("errorMessage").equals("disconnectOK")){ %>
+                    <font color ="green"> Vous avez bien été déconnecté </font>
+                <% }
+            } %>
         <br/>
         
         <!-- les boutons -->
         <form action="ServletConnection">
             <label for="login">Login :</label>
-            <input type="text" class="form-control" id="usr" name="login"style="max-width: 200px" placeholder="Entrez le login">
+            <input type="text" class="form-control" id="usr" name="login" style="max-width: 200px" placeholder="Entrez le login">
             <br>
             <label for="password">Password :</label>
-            <input type="password" class="form-control" id="mdp" name="password"style="max-width: 200px" placeholder="Entrez le mot de passe">
+            <input type="password" class="form-control" id="mdp" name="password" style="max-width: 200px" placeholder="Entrez le mot de passe">
             <label for="inscription">Nouveau client : </label>
             <input type="checkbox" name="inscription" value="Inscription" />
             <br>

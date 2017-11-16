@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -52,6 +53,12 @@ public class ServletConnection extends HttpServlet {
                 out.println("</head>");
                 out.println("<body>");
                 
+                if(request.getParameter("disconnect") != null){
+                    request.getSession().invalidate();
+                    request.setAttribute("errorMessage", "disconnectOK");
+                    this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
+                }
+                
                 //On récupère les attributs (cachés) envoyé après avoir appuyé sur "Connexion"
                 String user = request.getParameter("login");
                 String pass = request.getParameter("password");
@@ -74,8 +81,18 @@ public class ServletConnection extends HttpServlet {
                            if(user.equals("admin")){
                                this.getServletContext().getRequestDispatcher("/JSPAdmin.jsp").forward(request, response);
                                
-                           }else
+                           }else{
+                               String query = "select destination, numVol, nbreBillets from VOLS;";
+                               pst = conn.prepareStatement(query);
+                               rs = pst.executeQuery();
+                               ArrayList<String> list = new ArrayList<String>();
+                               while(rs.next()){
+                                   String row = rs.getString("destination") + ";" + rs.getString("numVol") + ";" + rs.getString("nbreBillets");
+                                   list.add(row);
+                               }
+                               request.setAttribute("ListeVols", list);
                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                           }
                        } 
                        else {
                            out.println("Incorrect login credentials");
@@ -85,16 +102,27 @@ public class ServletConnection extends HttpServlet {
                        }
                     }
                     else{
-                       PreparedStatement pst = conn.prepareStatement("insert into AUTHENTICATION values ('"+user+"','"+pass+"');");
-                       out.println("<br/>");
-                       int res = pst.executeUpdate();
-                       if(res > 0){
-                           //Nouveau client correctement créé -> On redirect comme pour une connexion normale
-                           out.println("New user " + user + " was successfully created");
-                           this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                       String query = "select login from AUTHENTICATION where login like ?";
+                       PreparedStatement prst = conn.prepareStatement(query);
+                       prst.setString(1, user);
+                       ResultSet rs = prst.executeQuery();
+                       if(rs.next()){
+                           //Le user existe déjà
+                           request.setAttribute("errorMessage", "loginexists");
+                           this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
                        }
-                       else
-                           out.println("Error while creating new user " + user);
+                       else{
+                            PreparedStatement pst = conn.prepareStatement("insert into AUTHENTICATION values ('"+user+"','"+pass+"');");
+                            out.println("<br/>");
+                            int res = pst.executeUpdate();
+                            if(res > 0){
+                                //Nouveau client correctement créé -> On redirect comme pour une connexion normale
+                                out.println("New user " + user + " was successfully created");
+                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                            }
+                            else
+                                out.println("Error while creating new user " + user);
+                       }
                     }
                 } 
                 catch (ClassNotFoundException | SQLException e) {

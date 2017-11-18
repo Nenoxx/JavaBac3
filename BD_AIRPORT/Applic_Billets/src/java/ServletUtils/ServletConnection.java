@@ -19,6 +19,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -32,6 +33,9 @@ import javax.servlet.http.HttpServletResponse;
 )
 public class ServletConnection extends HttpServlet {
     String[] quantities = null;
+    PreparedStatement pst = null;
+    ResultSet rs = null;
+    HttpSession currentSession = null;
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -53,30 +57,52 @@ public class ServletConnection extends HttpServlet {
                 out.println("</head>");
                 out.println("<body>");
                 
+                //On récupère les attributs (cachés) envoyé après avoir appuyé sur "Connexion"
+                String user = request.getParameter("login");
+                String pass = request.getParameter("password");
+                
+                currentSession = request.getSession();
+                
+                if(currentSession.getAttribute("login") == null){
+                    //Ne doit normalement se faire qu'une seule fois par session.
+                    currentSession.setAttribute("login", user);
+                    currentSession.setAttribute("password", pass);
+                    System.out.println("Login/Password enregistré dans la session.");
+                }
+                
                 if(request.getParameter("disconnect") != null){
+                    request.setAttribute("disconnect", null);
                     request.getSession().invalidate();
                     request.setAttribute("errorMessage", "disconnectOK");
                     this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
                 }
                 
                 if((quantities = request.getParameterValues("quantity")) != null){
+                    request.setAttribute("quantity", null); //Histoire de reset la valeur à chaque fois.
                     //Calculer les prix par-rapport aux valeurs obtenues
                 }
-                
-                //On récupère les attributs (cachés) envoyé après avoir appuyé sur "Connexion"
-                String user = request.getParameter("login");
-                String pass = request.getParameter("password");
+
                 String newClient = request.getParameter("inscription"); //<- est null si le client n'a pas coché la checkbox
                 try {
                     //Connexion à la BD MySQL
                     Class.forName("com.mysql.jdbc.Driver");
                     Connection conn = MyDBUtils.MyConnection(1, "mich", "password"); //Compte ne pouvant faire que des select et insert
+                    
+                    if(request.getParameter("reload") != null) //Le client a cliqué sur "Menu principal"
+                    {
+                        System.out.println("RELOAD REQUESTED");
+                        request.setAttribute("reload", null);
+                        ArrayList<String> list = PrepareMainPage(request, response, conn);
+                        request.setAttribute("ListeVols", list);
+                        this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                    }
+                    
                     if(newClient == null) //Client déjà existant
                     {
-                       PreparedStatement pst = conn.prepareStatement("Select login, password from AUTHENTICATION where login=? and password=?");
+                       pst = conn.prepareStatement("Select login, password from AUTHENTICATION where login=? and password=?");
                        pst.setString(1, user);
                        pst.setString(2, pass);
-                       ResultSet rs = pst.executeQuery();
+                       rs = pst.executeQuery();
                        if (rs.next()) {
                            //Si le resultset contient un tuple, c'est que le select a donné un résultat positif
                            out.println("Correct login credentials");
@@ -86,31 +112,24 @@ public class ServletConnection extends HttpServlet {
                                this.getServletContext().getRequestDispatcher("/JSPAdmin.jsp").forward(request, response);
                                
                            }else{
-                               String query = "select destination, numVol, nbreBillets, prix from VOLS;";
-                               try{
-                               pst = conn.prepareStatement(query);
-                               rs = pst.executeQuery();
-                               ArrayList<String> list = new ArrayList<String>();
-                               while(rs.next()){
-                                   String row = rs.getString("destination") + ";" + rs.getString("numVol") + ";" + rs.getString("nbreBillets") + ";" + rs.getString("prix");
-                                   list.add(row);
-                               }
+                               ArrayList<String> list = PrepareMainPage(request, response, conn);
                                request.setAttribute("ListeVols", list);
                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
-                               }
-                               catch(Exception ex){
-                                   System.out.println(ex.getLocalizedMessage());
-                               }
                            }
                        } 
                        else {
+                           try{
                            out.println("Incorrect login credentials");
                            //redirect sur la page de login avec message d'erreur
                            request.setAttribute("errorMessage", "badlogin");
                            this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
+                           }
+                           catch(IllegalStateException ex){
+                               System.out.println("IllegalStateException -> Aucune idée de pourquoi.");
+                           }
                        }
                     }
-                    else{
+                    else{ //Nouveau client
                        String query = "select login from AUTHENTICATION where login like ?";
                        PreparedStatement prst = conn.prepareStatement(query);
                        prst.setString(1, user);
@@ -140,6 +159,27 @@ public class ServletConnection extends HttpServlet {
                out.println("</body>");
                out.println("</html>");
         }
+    }
+    
+    private ArrayList<String> PrepareMainPage(HttpServletRequest request, HttpServletResponse response, Connection conn){
+        String query = "select destination, numVol, nbreBillets, prix from VOLS;";
+        ArrayList<String> list = null;
+        try{
+        request.setAttribute("login", currentSession.getAttribute("login"));
+        request.setAttribute("password", currentSession.getAttribute("password"));
+        pst = conn.prepareStatement(query);
+        rs = pst.executeQuery();
+        list = new ArrayList<>();
+        while(rs.next()){
+            String row = rs.getString("destination") + ";" + rs.getString("numVol") + ";" + rs.getString("nbreBillets") + ";" + rs.getString("prix");
+            list.add(row);
+        }
+        }
+        catch(SQLException ex){
+            System.out.println(ex.getLocalizedMessage());
+        }
+        
+        return list;
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

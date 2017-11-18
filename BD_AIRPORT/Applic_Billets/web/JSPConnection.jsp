@@ -34,14 +34,15 @@
             <% if(request.getAttribute("errorMessage") != null) {  
                  if(request.getAttribute("errorMessage").equals("badlogin")) {%>
                     <font color ="red"> Le login ou le mot de passe est incorrect </font>
-                <% }
+                    <% }
                 if(request.getAttribute("errorMessage").equals("loginexists")){ %>
                     <font color ="red"> Ce compte existe déjà </font>
                 <% } 
                 if(request.getAttribute("errorMessage").equals("disconnectOK")){ %>
                     <font color ="green"> Vous avez bien été déconnecté </font>
                 <% }
-            } %>
+            } 
+            request.setAttribute("errorMessage", null); %>
         <br/>
         
         <!-- les boutons -->

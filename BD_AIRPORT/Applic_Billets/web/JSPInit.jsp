@@ -21,8 +21,11 @@
     <body style="background-repeat:no-repeat; background-size: 100% auto" background="stonehaven.png">
         <nav class="navbar navbar-inverse">
         <div class="container-fluid">
-          <div class="navbar-header">
-            <a class="navbar-brand" href="#">Menu principal</a>
+          <div class="navbar-header" style="font-family: Verdana, sans-serif;">
+            <form method="post" action="ServletConnection" id="reload" style="display:inline;">
+                <a class="navbar-brand" href="#" onClick="askReload()">Menu principal</a>
+                <input type="hidden" value="reload" name="reload"/>
+            </form>
             <a class="navbar-brand" href="JSPCaddie.jsp">Mon panier</a>
             <a class="navbar-brand" href="#">Contacts</a> <!-- Placeholder... -->
             <form method="post" action="ServletConnection" id="DC">
@@ -34,8 +37,13 @@
                     var d = document.getElementById("DC");
                     d.submit();
                 }
+                
+                function askReload(){
+                    var d = document.getElementById("reload");
+                    d.submit();
+                }
             </script>
-            <p style="color:white;"><br>Connecté en tant que <% out.println("<em style=\"color:#42ebe6;\">" + request.getParameter("login") + "</em>"); %> </p>
+            <p style="color:white;"><br>Connecté en tant que <% out.println("<em style=\"color:#42ebe6;\">" + request.getAttribute("login") + "</em>"); %> </p>
           </div>
         </nav>
         <div class="ContainerVols">

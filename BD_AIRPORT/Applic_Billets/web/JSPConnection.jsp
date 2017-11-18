@@ -21,8 +21,8 @@
         <!-- la belle barre toute blo sur le haut de la page-->
         <nav class="navbar navbar-inverse">
         <div class="container-fluid">
-          <div class="navbar-header">
-            <a class="navbar-brand" href="#">Inpres Airport</a>
+          <div class="navbar-header" style="font-family:Verdana, sans-serif;">
+            <a class="navbar-brand" href="JSPConnection.jsp">Inpres Airport</a> <!-- Pas très utile mais permet de faire disparaitre les messages d'infos-->
           </div>
         </nav>
 

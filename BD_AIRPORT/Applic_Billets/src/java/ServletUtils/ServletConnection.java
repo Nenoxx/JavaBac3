@@ -65,9 +65,11 @@ public class ServletConnection extends HttpServlet {
                 
                 if(currentSession.getAttribute("login") == null){
                     //Ne doit normalement se faire qu'une seule fois par session.
+                    //-> Pour la session, on enregistre le login et le password pour des nécessités ultérieures.
                     currentSession.setAttribute("login", user);
                     currentSession.setAttribute("password", pass);
-                    System.out.println("Login/Password enregistré dans la session.");
+                    currentSession.setMaxInactiveInterval(3600); //Après X temps d'inactivité (en secondes) -> session détruite.
+                    // ---> Le contenu du Caddie sera donc détruit aussi ! Permet de faire un timeout.
                 }
                 
                 if(request.getParameter("disconnect") != null){
@@ -79,7 +81,7 @@ public class ServletConnection extends HttpServlet {
                 
                 if((quantities = request.getParameterValues("quantity")) != null){
                     request.setAttribute("quantity", null); //Histoire de reset la valeur à chaque fois.
-                    //Calculer les prix par-rapport aux valeurs obtenues
+                    //Calcul du total à payer par-rapport aux valeurs obtenues
                 }
 
                 String newClient = request.getParameter("inscription"); //<- est null si le client n'a pas coché la checkbox
@@ -146,6 +148,9 @@ public class ServletConnection extends HttpServlet {
                             if(res > 0){
                                 //Nouveau client correctement créé -> On redirect comme pour une connexion normale
                                 out.println("New user " + user + " was successfully created");
+                                ArrayList<String> list = PrepareMainPage(request, response, conn);
+                                request.setAttribute("ListeVols", list);
+                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
                                 this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
                             }
                             else
@@ -175,7 +180,7 @@ public class ServletConnection extends HttpServlet {
             list.add(row);
         }
         }
-        catch(SQLException ex){
+        catch(Exception ex){
             System.out.println(ex.getLocalizedMessage());
         }
         

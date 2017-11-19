@@ -110,8 +110,18 @@ public class ServletConnection extends HttpServlet {
                         }
                         
                         currentSession.setAttribute("Caddie", Caddie);
-                        this.getServletContext().getRequestDispatcher("/JSPCaddie.jsp").forward(request, response); //A CHANGER
-                    }   
+                        request.setAttribute("Caddie", Caddie);
+                        request.setAttribute("login", currentSession.getAttribute("login"));
+                        request.setAttribute("password", currentSession.getAttribute("password"));
+                        this.getServletContext().getRequestDispatcher("/JSPCaddie.jsp").forward(request, response);
+                    }
+                    
+                    if(request.getParameter("reloadCaddie") != null){ 
+                        request.setAttribute("Caddie", currentSession.getAttribute("Caddie"));
+                        request.setAttribute("login", currentSession.getAttribute("login"));
+                        request.setAttribute("password", currentSession.getAttribute("password"));
+                        this.getServletContext().getRequestDispatcher("/JSPCaddie.jsp").forward(request, response);
+                    }
                     
                     if(request.getParameter("reload") != null) //Le client a cliqué sur "Menu principal"
                     {

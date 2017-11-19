@@ -26,7 +26,10 @@
                 <a class="navbar-brand" href="#" onClick="askReload()">Menu principal</a>
                 <input type="hidden" value="reload" name="reload"/>
             </form>
-            <a class="navbar-brand" href="JSPCaddie.jsp">Mon panier</a>
+            <form action="ServletConnection" id="reloadCaddie" style="display:inline;">
+              <a class="navbar-brand" href="#" onClick="askReloadC()">Mon panier</a>
+              <input type="hidden" value="reloadCaddie" name="reloadCaddie"/>
+            </form>
             <a class="navbar-brand" href="#">Contacts</a> <!-- Placeholder... -->
             <form method="post" action="ServletConnection" id="DC">
                 <a class="navbar-brand" onClick="post()" href='#' style="position:absolute; right:10px;">Se déconnecter</a>
@@ -42,9 +45,15 @@
                     var d = document.getElementById("reload");
                     d.submit();
                 }
+                
+                function askReloadC(){
+                    var d = document.getElementById("reloadCaddie");
+                    d.submit();
+                }
             </script>
             <p style="color:white;"><br>Connecté en tant que <% out.println("<em style=\"color:#42ebe6;\">" + request.getAttribute("login") + "</em>"); %> </p>
           </div>
+        </div>
         </nav>
         <form action="ServletConnection">
         <div class="ContainerVols">

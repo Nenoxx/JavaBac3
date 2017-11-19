@@ -36,6 +36,8 @@ public class ServletConnection extends HttpServlet {
     PreparedStatement pst = null;
     ResultSet rs = null;
     HttpSession currentSession = null;
+    ArrayList<String> Caddie = null;
+    
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -62,6 +64,8 @@ public class ServletConnection extends HttpServlet {
                 String pass = request.getParameter("password");
                 
                 currentSession = request.getSession();
+                Caddie = (ArrayList<String>)currentSession.getAttribute("Caddie"); 
+                //Pour ne pas écraser l'ancien caddie, on essaie de le récupérer s'il existe. Sinon = null.
                 
                 if(currentSession.getAttribute("login") == null){
                     //Ne doit normalement se faire qu'une seule fois par session.
@@ -78,17 +82,36 @@ public class ServletConnection extends HttpServlet {
                     request.setAttribute("errorMessage", "disconnectOK");
                     this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
                 }
-                
-                if((quantities = request.getParameterValues("quantity")) != null){
-                    request.setAttribute("quantity", null); //Histoire de reset la valeur à chaque fois.
-                    //Calcul du total à payer par-rapport aux valeurs obtenues
-                }
 
                 String newClient = request.getParameter("inscription"); //<- est null si le client n'a pas coché la checkbox
                 try {
                     //Connexion à la BD MySQL
                     Class.forName("com.mysql.jdbc.Driver");
                     Connection conn = MyDBUtils.MyConnection(1, "mich", "password"); //Compte ne pouvant faire que des select et insert
+                    
+                    // --- INITIALISATION DU CADDIE ---
+                    if((quantities = request.getParameterValues("quantity")) != null){;
+                        int i = 0;
+                        
+                        if(Caddie == null)
+                            Caddie = new ArrayList<>();
+                        
+                        request.setAttribute("quantity", null); //Histoire de reset la valeur à chaque fois.
+                        rs = MyDBUtils.MySelect("select * from VOLS", conn);
+                        while(rs.next()){
+                            
+                            if(Integer.parseInt(quantities[i]) > 0){
+                                String rowCaddie = rs.getString("destination") + ";" + rs.getString("prix") + ";" + quantities[i];
+                                Caddie.add(rowCaddie);
+                                System.out.println("Ajouté au caddie : "  + rs.getString("destination") + " x" + quantities[i]);
+                            }
+                            
+                            i++;
+                        }
+                        
+                        currentSession.setAttribute("Caddie", Caddie);
+                        this.getServletContext().getRequestDispatcher("/JSPCaddie.jsp").forward(request, response); //A CHANGER
+                    }   
                     
                     if(request.getParameter("reload") != null) //Le client a cliqué sur "Menu principal"
                     {

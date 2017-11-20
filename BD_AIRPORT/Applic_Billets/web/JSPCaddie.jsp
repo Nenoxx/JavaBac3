@@ -30,7 +30,7 @@
               <a class="navbar-brand" href="#" onClick="askReloadC()">Mon panier</a>
               <input type="hidden" value="reloadCaddie" name="reloadCaddie"/>
             </form>
-            <a class="navbar-brand" href="#">Contacts</a> <!-- Placeholder... -->
+            <a class="navbar-brand" href="#">Contact</a> <!-- Placeholder... -->
             <form method="post" action="ServletConnection" id="DC">
                 <a class="navbar-brand" onClick="post()" href='#' style="position:absolute; right:10px;">Se déconnecter</a>
                 <input type='hidden' value='disconnect' name='disconnect'/>
@@ -58,19 +58,25 @@
         <%
             //On récupère le caddie à afficher
             ArrayList<String> Caddie = (ArrayList<String>)request.getAttribute("Caddie");
-            for(String str : Caddie){
-                String[] infos = str.split(";");
-                //On construit un container avec les infos du caddie
-                out.println(""
-                + "<div class=\"CaddieContainer\" style=\"float:left;\">  "
-                + " <div class=\"CaddieInfos\" style=\"border: 4px black ridge; border-radius:10px; margin:auto; padding:10px; width:700px; background-image:url(vintage-concrete.png);\">  "
-                + "     <h3 style=\"text-shadow: 1px 1px 1px black;\">Billets pour "+ infos[0] +" x" + infos[2] + "</h3>" 
-                + "     <p style=\"text-align:left;\"> Prix de base : " + infos[1] +"</p>"
-                + "     <p style=\"text-align:left;\"> Prix total : "
-                + "     <span style=\"float:right; position:relative; font-size:16px; font-family:Impact, sans-serif;\">" + Integer.parseInt(infos[1]) * Integer.parseInt(infos[2]) + "€</span> </p>"
-                + " </div>"
-                + "</div>");
+            if(Caddie != null){
+                for(String str : Caddie){
+                    String[] infos = str.split(";");
+                    //On construit un container avec les infos du caddie
+                    out.println(""
+                    + "<div class=\"CaddieContainer\" style=\"float:left;\">  "
+                    + " <div class=\"CaddieInfos\" style=\"border: 4px black ridge; border-radius:10px; margin:auto; padding:10px; width:700px; background-image:url(vintage-concrete.png);\">  "
+                    + "     <h3 style=\"text-shadow: 1px 1px 1px black;\">Billets pour "+ infos[0] +" x" + infos[2] + "</h3>" 
+                    + "     <p style=\"text-align:left;\"> Prix de base : " + infos[1] +"</p>"
+                    + "     <p style=\"text-align:left;\"> Prix total : "
+                    + "     <span style=\"float:right; position:relative; font-size:16px; font-family:Impact, sans-serif;\">" + Integer.parseInt(infos[1]) * Integer.parseInt(infos[2]) + "€</span> </p>"
+                    + " </div>"
+                    + "</div>");
+                }
             }
+            else{ %>
+            <p style="text-align: center; font-size: 20px; font-family: Verdana, sans-serif;"> On dirait bien que votre Caddie est vide ! Si vous aviez néanmoins passé une commande, vérifiez <br> 
+                que le nombre de billets entré est correct, sinon la commande n'est pas prise en compte. </p>
+            <% }
         %>
     </body>
 </html>

@@ -12,8 +12,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -31,12 +32,13 @@ import javax.servlet.http.HttpSession;
        displayName = "Connection handling Servlet",
        urlPatterns = "/ServletConnection"
 )
-public class ServletConnection extends HttpServlet {
+public class ServletConnection extends HttpServlet{
     String[] quantities = null;
     PreparedStatement pst = null;
     ResultSet rs = null;
     HttpSession currentSession = null;
     ArrayList<String> Caddie = null;
+    Connection conn = null;
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -78,6 +80,9 @@ public class ServletConnection extends HttpServlet {
                 
                 if(request.getParameter("disconnect") != null){
                     request.setAttribute("disconnect", null);
+                    //Check si des billets ont été réservés sans payer
+                    
+                    CheckCaddie();
                     request.getSession().invalidate();
                     request.setAttribute("errorMessage", "disconnectOK");
                     this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
@@ -87,10 +92,10 @@ public class ServletConnection extends HttpServlet {
                 try {
                     //Connexion à la BD MySQL
                     Class.forName("com.mysql.jdbc.Driver");
-                    Connection conn = MyDBUtils.MyConnection(1, "mich", "password"); //Compte ne pouvant faire que des select et insert
+                    conn = MyDBUtils.MyConnection(1, "mich", "password"); //Compte ne pouvant faire que des select, insert, update
                     
                     // --- INITIALISATION DU CADDIE ---
-                    if((quantities = request.getParameterValues("quantity")) != null){;
+                    if((quantities = request.getParameterValues("quantity")) != null){
                         int i = 0;
                         
                         if(Caddie == null)
@@ -100,12 +105,19 @@ public class ServletConnection extends HttpServlet {
                         rs = MyDBUtils.MySelect("select * from VOLS", conn);
                         while(rs.next()){
                             
-                            if(Integer.parseInt(quantities[i]) > 0){
+                            if(Integer.parseInt(quantities[i]) > 0 && 
+                               Integer.parseInt(quantities[i]) < Integer.parseInt(rs.getString("nbreBillets"))){
                                 String rowCaddie = rs.getString("destination") + ";" + rs.getString("prix") + ";" + quantities[i];
                                 Caddie.add(rowCaddie);
                                 System.out.println("Ajouté au caddie : "  + rs.getString("destination") + " x" + quantities[i]);
+                                String update = "update VOLS set nbreBillets = (nbreBillets - ?) where destination like ?";
+                                pst = conn.prepareStatement(update);
+                                pst.setString(1, quantities[i]);
+                                pst.setString(2, rs.getString("destination"));
+                                if((pst.executeUpdate()) > 0){
+                                    System.out.println("Nombre de billets mit à jour correctement");
+                                }
                             }
-                            
                             i++;
                         }
                         
@@ -219,7 +231,28 @@ public class ServletConnection extends HttpServlet {
         
         return list;
     }
+    
+    private void CheckCaddie(){
+        Caddie = (ArrayList<String>)currentSession.getAttribute("Caddie");
+        if(Caddie != null){
+            for(String str : Caddie){
+                String[] row = str.split(";");
+                System.out.println("ROW : " + str);
+                String update = "update VOLS set nbreBillets = (nbreBillets + ?) where destination like ?";
+                try {
+                    pst = conn.prepareStatement(update);
+                    pst.setString(1, row[2]);
+                    pst.setString(2, row[0]);
 
+                    if((pst.executeUpdate()) > 0){
+                        System.out.println("Nombre de billets mit à jour correctement");
+                    }
+                } catch (SQLException ex) {
+                    Logger.getLogger(ServletConnection.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.

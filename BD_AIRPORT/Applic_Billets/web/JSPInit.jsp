@@ -30,7 +30,7 @@
               <a class="navbar-brand" href="#" onClick="askReloadC()">Mon panier</a>
               <input type="hidden" value="reloadCaddie" name="reloadCaddie"/>
             </form>
-            <a class="navbar-brand" href="#">Contacts</a> <!-- Placeholder... -->
+            <a class="navbar-brand" href="#">Contact</a> <!-- Placeholder... -->
             <form method="post" action="ServletConnection" id="DC">
                 <a class="navbar-brand" onClick="post()" href='#' style="position:absolute; right:10px;">Se déconnecter</a>
                 <input type='hidden' value='disconnect' name='disconnect'/>

@@ -106,18 +106,25 @@ public class ServletConnection extends HttpServlet{
                     if((quantities = request.getParameterValues("quantity")) != null){
                         int i = 0;
                         
-                        if(Caddie == null)
+                        if(Caddie == null) //Cas où la session vient d'être créée
                             Caddie = new ArrayList<>();
                         
-                        request.setAttribute("quantity", null); //Histoire de reset la valeur à chaque fois.
-                        rs = MyDBUtils.MySelect("select * from VOLS", conn);
+                        rs = MyDBUtils.MySelect("select * from VOLS", conn); //Pas besoin de preparedStatement ici
                         while(rs.next()){
+                            //On va regarder pour chaque vol disponible dans la table si l'utilisateur en a demandé ou non
+                            //(La structure reçue en paramètre dans 'quantities' contient une valeur par champ input sur JSPInit)
                             
                             if(Integer.parseInt(quantities[i]) > 0 && 
                                Integer.parseInt(quantities[i]) <= Integer.parseInt(rs.getString("nbreBillets"))){
+                                
+                                //Cas où l'utilisateur a demandé au moins un billet pour cette destination
                                 String rowCaddie = rs.getString("destination") + ";" + rs.getString("prix") + ";" + quantities[i];
                                 Caddie.add(rowCaddie);
                                 System.out.println("Ajouté au caddie : "  + rs.getString("destination") + " x" + quantities[i]);
+                                
+                                //Et on met à jour la table afin de décrémenter le nombre maximum de billets.
+                                //Billets réservés = promesse, quelqu'un d'autre ne doit pas pouvoir venir prendre les billets
+                                //d'un autre dans son caddie, donc on met la BDD à jour ici.
                                 String update = "update VOLS set nbreBillets = (nbreBillets - ?) where destination like ?";
                                 pst = conn.prepareStatement(update);
                                 pst.setString(1, quantities[i]);
@@ -129,13 +136,15 @@ public class ServletConnection extends HttpServlet{
                             i++;
                         }
                         
+                        //Une fois le caddie créé / initialisé, on le donne en prochain paramètre à la requête
+                        //Et on redirige vers la page de visionnement du Caddie.
                         currentSession.setAttribute("Caddie", Caddie);
                         request.setAttribute("Caddie", Caddie);
                         request.setAttribute("login", currentSession.getAttribute("login"));
-                        request.setAttribute("password", currentSession.getAttribute("password"));
                         this.getServletContext().getRequestDispatcher("/JSPCaddie.jsp").forward(request, response);
                     }
                     
+                    //Quand on clique sur l'onglet "Mon panier" de la barre bleue
                     if(request.getParameter("reloadCaddie") != null){ 
                         request.setAttribute("Caddie", currentSession.getAttribute("Caddie"));
                         request.setAttribute("login", currentSession.getAttribute("login"));
@@ -143,7 +152,8 @@ public class ServletConnection extends HttpServlet{
                         this.getServletContext().getRequestDispatcher("/JSPCaddie.jsp").forward(request, response);
                     }
                     
-                    if(request.getParameter("reload") != null) //Le client a cliqué sur "Menu principal"
+                    //Quand on clique sur l'onglet "Menu principal" de la barre bleue
+                    if(request.getParameter("reload") != null)
                     {
                         System.out.println("RELOAD REQUESTED");
                         ArrayList<String> list = PrepareMainPage(request, response, conn);
@@ -151,6 +161,7 @@ public class ServletConnection extends HttpServlet{
                         this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
                     }
                     
+                    //2e étape du paiement, requête envoyée par JSPPay avec les infos du clients à enregistrer.
                     if(request.getParameter("PayProcess") != null){
                         String Total = "" + CalculerTotal();
                         if(request.getParameter("password").equals(currentSession.getAttribute("password"))){
@@ -166,6 +177,8 @@ public class ServletConnection extends HttpServlet{
                             if(pst.executeUpdate() > 0){
                                 request.setAttribute("message", "payOK");
                                 currentSession.setAttribute("Caddie", null); //On supprime le caddie.
+                                
+                                //Et on redirige vers JSPInit
                                 request.setAttribute("login", user);
                                 ArrayList<String> list = PrepareMainPage(request, response, conn);
                                 request.setAttribute("ListeVols", list);
@@ -189,10 +202,10 @@ public class ServletConnection extends HttpServlet{
                            out.println("Correct login credentials");
                            request.setAttribute("login", "");
                            request.setAttribute("password", "");
-                           if(user.equals("admin")){
+                           if(user.equals("admin")){ //Utilisateur admin -> Page d'administration spéciale
                                this.getServletContext().getRequestDispatcher("/JSPAdmin.jsp").forward(request, response);
                                
-                           }else{
+                           }else{ //Utilisateur normal
                                ArrayList<String> list = PrepareMainPage(request, response, conn);
                                request.setAttribute("ListeVols", list);
                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
@@ -221,6 +234,8 @@ public class ServletConnection extends HttpServlet{
                            this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
                        }
                        else{
+                            //Création d'un nouvel utilisateur -> Insertion dans la table AUTHENTICATION
+                            //des credentials.
                             PreparedStatement pst = conn.prepareStatement("insert into AUTHENTICATION values ('"+user+"','"+pass+"');");
                             out.println("<br/>");
                             int res = pst.executeUpdate();
@@ -245,6 +260,10 @@ public class ServletConnection extends HttpServlet{
         }
     }
     
+    /*
+    Fonction permettant d'aller chercher les informations qui nous intéresse dans la base de donnée
+    afin de les afficher dans JSPInit.
+    */
     private ArrayList<String> PrepareMainPage(HttpServletRequest request, HttpServletResponse response, Connection conn){
         String query = "select destination, numVol, nbreBillets, prix from VOLS;";
         ArrayList<String> list = null;
@@ -266,6 +285,11 @@ public class ServletConnection extends HttpServlet{
         return list;
     }
     
+    /*
+    Fonction permettant, lors de la fin d'une session, de regarder s'il y a des billets
+    invendus dans le caddie. Si oui, alors on rajoute les billets qui ont été prit
+    auparavant pour qu'il n'y ait pas de pertes.
+    */
     private void CheckCaddie(){
         Caddie = (ArrayList<String>)currentSession.getAttribute("Caddie");
         if(Caddie != null){

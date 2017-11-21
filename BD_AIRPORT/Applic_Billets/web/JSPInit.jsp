@@ -55,7 +55,7 @@
           </div>
         </div>
         </nav>
-          <div class="ErrorContainer" style="margin:auto; padding:auto;">
+          <div class="ErrorContainer" style="margin:auto; padding:auto; clear:both;">
               <% 
                     if(request.getParameter("message")!= null){
                         if(request.getParameter("message").equals("payOK"));

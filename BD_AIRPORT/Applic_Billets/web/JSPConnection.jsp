@@ -27,7 +27,7 @@
         </nav>
 
 <!-- Container permettant de paramétrer le positionnement des objets -->
-<div  class=pull-right>
+<div class=pull-right>
     <div class="container"style="width: 500px;margin-right: auto; margin-left: auto;">
         <div class="jumbotron" style="background: transparent;" >
         
@@ -48,15 +48,15 @@
         <!-- les boutons -->
         <form action="ServletConnection">
             <label for="login">Login :</label>
-            <input type="text" class="form-control" id="usr" name="login" style="max-width: 200px" placeholder="Entrez le login">
+            <input type="text" class="form-control" id="usr" name="login" style="max-width: 200px; display:inline-block; padding:auto; margin-left: 62px;" placeholder="Entrez le login">
             <br>
-            <label for="password">Password :</label>
-            <input type="password" class="form-control" id="mdp" name="password" style="max-width: 200px" placeholder="Entrez le mot de passe">
+            <label for="password">Mot de passe :</label>
+            <input type="password" class="form-control" id="mdp" name="password" style="max-width: 200px; display:inline-block; padding:auto; margin-left:10px;" placeholder="Entrez le mot de passe">
             <label for="inscription">Nouveau client : </label>
             <input type="checkbox" name="inscription" value="Inscription" />
             <br>
             <br>
-            <button type="submit" class="btn btn-warning">Connexion</button>      
+            <button type="submit">Connexion</button>      
             </form>  
         </div>
     </div>

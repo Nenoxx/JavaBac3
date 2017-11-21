@@ -36,6 +36,9 @@
                 <input type='hidden' value='disconnect' name='disconnect'/>
             </form>
             <script type="text/javascript">
+                //Trois fonctions basiques nous permettant de simuler l'appui
+                //d'un bouton de type submit lorsqu'on clique sur le menu
+                //de navigation (-> Requête de reload avec les bonnes infos à la servlet)
                 function post(){
                     var d = document.getElementById("DC");
                     d.submit();

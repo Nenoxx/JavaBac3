@@ -73,6 +73,9 @@
                 <label for="password" style="padding:20px;">Confirmez votre mot de passe : </label>
                 <input type="password" class="form-control" id="PasswordInput" name="password" style="max-width: 200px; display:inline-block;">
                 <br>
+                <p style="font-family: Verdana, sans-serif; font-size: 20px; text-align: center;">Montant total à payer : <% out.println(request.getAttribute("Total") + "€"); %></p>
+                <br>
+                <input type="hidden" value="PayProcess" name="PayProcess">
                 <button type="submit"class="btn btn-warning" style="width:100px; margin-left: 325px;">Payer</button> 
             </form>
         </div>

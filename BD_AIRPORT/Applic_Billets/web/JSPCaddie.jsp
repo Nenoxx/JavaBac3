@@ -55,10 +55,11 @@
           </div>
         </div>
         </nav>
+          <form action="ServletConnection">
         <%
             //On récupère le caddie à afficher
             ArrayList<String> Caddie = (ArrayList<String>)request.getAttribute("Caddie");
-            if(Caddie != null){
+            if(Caddie != null && !Caddie.isEmpty()){
                 for(String str : Caddie){
                     String[] infos = str.split(";");
                     //On construit un container avec les infos du caddie
@@ -72,11 +73,16 @@
                     + " </div>"
                     + "</div>");
                 }
+                out.println("<div class=\"ButtonRegion\" style=\"clear:both; text-align:left; padding:10px; width:500px;\">"); 
+                    out.println("<button type=\"submit\">Passer à la caisse</button>");
+                    out.println("<input type=\"hidden\" name=\"PayRequest\" value=\"PayRequest\"");
+                out.println("</div>");
             }
-            else{ %>
+            else { %>
             <p style="text-align: center; font-size: 20px; font-family: Verdana, sans-serif;"> On dirait bien que votre Caddie est vide ! Si vous aviez néanmoins passé une commande, vérifiez <br> 
                 que le nombre de billets entré est correct, sinon la commande n'est pas prise en compte. </p>
             <% }
+            out.println("</form>");
         %>
     </body>
 </html>

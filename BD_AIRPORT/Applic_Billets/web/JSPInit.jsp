@@ -55,27 +55,40 @@
           </div>
         </div>
         </nav>
+          <div class="ErrorContainer" style="margin:auto; padding:auto;">
+              <% 
+                    if(request.getParameter("message")!= null){
+                        if(request.getParameter("message").equals("payOK"));
+                        %> <p style="color:green; font-size: 14px; font-family: Verdana, sans-serif;"> Merci pour votre achat ! </p> <% 
+                        if(request.getParameter("message").equals("payNOK"));{
+                        %> <p style="color:red; font-size: 14px; font-family: Verdana, sans-serif;"> L'achat n'a pas pu être terminé, vous n'avez pas été débité. </p> <%
+                        }
+                    }
+              %>
+          </div>
         <form action="ServletConnection">
         <div class="ContainerVols">
         <%
             //On récupère la liste des vols à afficher
             ArrayList<String> listeVols = (ArrayList<String>)request.getAttribute("ListeVols");
-            for(String str : listeVols){
-                String[] infos = str.split(";");
-                //On construit un container avec les infos du vol pour chaque vol
-                out.println(""
-                + "<div class=\"VolContainer\" style=\"float:left;\">  "
-                + " <div class=\"VolInfos\" style=\"border: 4px black ridge; border-radius:10px; margin:auto; padding:10px; width:700px; background-image:url(vintage-concrete.png);\">  "
-                + "     <h3 style=\"text-shadow: 1px 1px 1px black;\">Voyage en destination de "+ infos[0] +"</h3>" 
-                + "     <p style=\"text-align:left;\"> Vol n°" + infos[1] +"</p>"
-                + "     <p style=\"text-align:left;\"> Places disponibles : " + infos[2]
-                + "     <span style=\"float:right; position:relative; font-size:16px; font-family:Impact, sans-serif;\">" + infos[3] + "€</span> </p>"
-                + " </div>"
-                + "</div>"
-                + "<div class=\"UserInput\" style=\"float:right; text-align:left; margin:auto; width:500px;\">"
-                    + "<label for=\"quantity\">Quantité voulue : </label>"
-                    + "<input type=\"text\" class=\"form-control\" id=\"InputQuantity\" name=\"quantity\" style=\"max-width:200px;\" value=\"0\" placeholder=\"Laissez 0 si vous ne prenez rien.\">"
-                + "</div>");
+            if(listeVols != null && !listeVols.isEmpty()){
+                for(String str : listeVols){
+                    String[] infos = str.split(";");
+                    //On construit un container avec les infos du vol pour chaque vol
+                    out.println(""
+                    + "<div class=\"VolContainer\" style=\"float:left;\">  "
+                    + " <div class=\"VolInfos\" style=\"border: 4px black ridge; border-radius:10px; margin:auto; padding:10px; width:700px; background-image:url(vintage-concrete.png);\">  "
+                    + "     <h3 style=\"text-shadow: 1px 1px 1px black;\">Voyage en destination de "+ infos[0] +"</h3>" 
+                    + "     <p style=\"text-align:left;\"> Vol n°" + infos[1] +"</p>"
+                    + "     <p style=\"text-align:left;\"> Places disponibles : " + infos[2]
+                    + "     <span style=\"float:right; position:relative; font-size:16px; font-family:Impact, sans-serif;\">" + infos[3] + "€</span> </p>"
+                    + " </div>"
+                    + "</div>"
+                    + "<div class=\"UserInput\" style=\"float:right; text-align:left; margin:auto; width:500px;\">"
+                        + "<label for=\"quantity\">Quantité voulue : </label>"
+                        + "<input type=\"text\" class=\"form-control\" id=\"InputQuantity\" name=\"quantity\" style=\"max-width:200px;\" value=\"0\" placeholder=\"Laissez 0 si vous ne prenez rien.\">"
+                    + "</div>");
+                }
             }
         %>  
         </div>  

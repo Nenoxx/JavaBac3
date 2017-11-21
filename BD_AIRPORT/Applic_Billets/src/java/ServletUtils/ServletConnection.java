@@ -78,6 +78,16 @@ public class ServletConnection extends HttpServlet{
                     // ---> Le contenu du Caddie sera donc détruit aussi ! Permet de faire un timeout.
                 }
                 
+                if(request.getParameter("PayRequest") != null){
+                    //Calculer le montant total à payer
+                    int Total = 0;
+                    Total = CalculerTotal();
+                    
+                    request.setAttribute("Total", Total);
+                    request.setAttribute("login", currentSession.getAttribute("login"));
+                    this.getServletContext().getRequestDispatcher("/JSPPay.jsp").forward(request, response);
+                }
+                
                 if(request.getParameter("disconnect") != null){
                     request.setAttribute("disconnect", null);
                     //Check si des billets ont été réservés sans payer
@@ -138,10 +148,36 @@ public class ServletConnection extends HttpServlet{
                     if(request.getParameter("reload") != null) //Le client a cliqué sur "Menu principal"
                     {
                         System.out.println("RELOAD REQUESTED");
-                        request.setAttribute("reload", null);
                         ArrayList<String> list = PrepareMainPage(request, response, conn);
                         request.setAttribute("ListeVols", list);
                         this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                    }
+                    
+                    if(request.getParameter("PayProcess") != null){
+                        String Total = "" + CalculerTotal();
+                        if(request.getParameter("password").equals(currentSession.getAttribute("password"))){
+                            //Comparaison du mot de passe ré-entré dans le formulaire de paiement avec celui stocké dans la session
+                            String insert = "insert into FACTURE(nom, prenom, rue, commune, codePostal, paiement) values(?, ?, ?, ?, ?, ?)";
+                            pst = conn.prepareStatement(insert);
+                            pst.setString(1, request.getParameter("name"));
+                            pst.setString(2, request.getParameter("surname"));
+                            pst.setString(3, request.getParameter("street"));
+                            pst.setString(4, request.getParameter("town"));
+                            pst.setString(5, request.getParameter("postalCode"));
+                            pst.setString(6, Total);
+                            if(pst.executeUpdate() > 0){
+                                request.setAttribute("message", "payOK");
+                                currentSession.setAttribute("Caddie", null); //On supprime le caddie.
+                                request.setAttribute("login", user);
+                                ArrayList<String> list = PrepareMainPage(request, response, conn);
+                                request.setAttribute("ListeVols", list);
+                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                            }
+                            else{
+                                request.setAttribute("message", "payNOK");
+                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                            }
+                        }
                     }
                     
                     if(newClient == null) //Client déjà existant
@@ -253,6 +289,18 @@ public class ServletConnection extends HttpServlet{
             }
         }
     }
+    
+    private int CalculerTotal(){
+        int Total = 0;
+        Caddie = (ArrayList<String>)currentSession.getAttribute("Caddie");
+        for(String str : Caddie){
+            String[] row = str.split(";");
+            Total += (Integer.parseInt(row[1]) * Integer.parseInt(row[2]));
+        }
+        
+        return Total;
+    }
+    
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.

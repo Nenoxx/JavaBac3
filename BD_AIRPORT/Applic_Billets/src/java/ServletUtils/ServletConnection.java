@@ -74,8 +74,6 @@ public class ServletConnection extends HttpServlet{
                     //-> Pour la session, on enregistre le login et le password pour des nécessités ultérieures.
                     currentSession.setAttribute("login", user);
                     currentSession.setAttribute("password", pass);
-                    currentSession.setMaxInactiveInterval(3600); //Après X temps d'inactivité (en secondes) -> session détruite.
-                    // ---> Le contenu du Caddie sera donc détruit aussi ! Permet de faire un timeout.
                 }
                 
                 if(request.getParameter("PayRequest") != null){
@@ -116,7 +114,7 @@ public class ServletConnection extends HttpServlet{
                         while(rs.next()){
                             
                             if(Integer.parseInt(quantities[i]) > 0 && 
-                               Integer.parseInt(quantities[i]) < Integer.parseInt(rs.getString("nbreBillets"))){
+                               Integer.parseInt(quantities[i]) <= Integer.parseInt(rs.getString("nbreBillets"))){
                                 String rowCaddie = rs.getString("destination") + ";" + rs.getString("prix") + ";" + quantities[i];
                                 Caddie.add(rowCaddie);
                                 System.out.println("Ajouté au caddie : "  + rs.getString("destination") + " x" + quantities[i]);
@@ -208,7 +206,7 @@ public class ServletConnection extends HttpServlet{
                            this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
                            }
                            catch(IllegalStateException ex){
-                               System.out.println("IllegalStateException -> Aucune idée de pourquoi.");
+                               System.out.println("");
                            }
                        }
                     }

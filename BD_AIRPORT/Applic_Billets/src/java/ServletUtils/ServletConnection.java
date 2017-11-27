@@ -9,6 +9,7 @@ import databaseUtils.MyDBUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -74,6 +75,7 @@ public class ServletConnection extends HttpServlet{
                     //-> Pour la session, on enregistre le login et le password pour des nécessités ultérieures.
                     currentSession.setAttribute("login", user);
                     currentSession.setAttribute("password", pass);
+                    InitTimerThread();
                 }
                 
                 if(request.getParameter("PayRequest") != null){
@@ -90,7 +92,6 @@ public class ServletConnection extends HttpServlet{
                     request.setAttribute("disconnect", null);
                     //Check si des billets ont été réservés sans payer
                     
-                    CheckCaddie();
                     request.getSession().invalidate();
                     request.setAttribute("errorMessage", "disconnectOK");
                     this.getServletContext().getRequestDispatcher("/JSPConnection.jsp").forward(request, response);
@@ -136,9 +137,11 @@ public class ServletConnection extends HttpServlet{
                             i++;
                         }
                         
-                        //Une fois le caddie créé / initialisé, on le donne en prochain paramètre à la requête
+                        //Une fois le caddie créé / initialisé, on l'enregistre dans la BD,
+                        //on le donne en prochain paramètre à la requête
                         //Et on redirige vers la page de visionnement du Caddie.
-                        currentSession.setAttribute("Caddie", Caddie);
+                        
+                        InsertCaddie(Caddie);
                         request.setAttribute("Caddie", Caddie);
                         request.setAttribute("login", currentSession.getAttribute("login"));
                         this.getServletContext().getRequestDispatcher("/JSPCaddie.jsp").forward(request, response);
@@ -245,7 +248,6 @@ public class ServletConnection extends HttpServlet{
                                 ArrayList<String> list = PrepareMainPage(request, response, conn);
                                 request.setAttribute("ListeVols", list);
                                 this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
-                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
                             }
                             else
                                 out.println("Error while creating new user " + user);
@@ -285,31 +287,37 @@ public class ServletConnection extends HttpServlet{
         return list;
     }
     
-    /*
-    Fonction permettant, lors de la fin d'une session, de regarder s'il y a des billets
-    invendus dans le caddie. Si oui, alors on rajoute les billets qui ont été prit
-    auparavant pour qu'il n'y ait pas de pertes.
-    */
-    private void CheckCaddie(){
-        Caddie = (ArrayList<String>)currentSession.getAttribute("Caddie");
-        if(Caddie != null){
-            for(String str : Caddie){
-                String[] row = str.split(";");
-                System.out.println("ROW : " + str);
-                String update = "update VOLS set nbreBillets = (nbreBillets + ?) where destination like ?";
+    private void InitTimerThread(){
+        Thread CaddieChecker = new Thread() {
+            public void run() {
                 try {
-                    pst = conn.prepareStatement(update);
-                    pst.setString(1, row[2]);
-                    pst.setString(2, row[0]);
-
-                    if((pst.executeUpdate()) > 0){
-                        System.out.println("Nombre de billets mit à jour correctement");
+                    Thread.sleep(60*1000);
+                    String query = "select * from PANIERS";
+                    ResultSet res = MyDBUtils.MySelect(query, getConnection());
+                    while(res.next()){
+                        Date CurrentDate, DateExpiration = res.getDate("DatePeremption");
+                        CurrentDate = getCurrentDate();
+                        if(CurrentDate.after(DateExpiration)){
+                            //Caddie expiré ! Retirer et remettre les billets.
+                            String RowCaddie = res.getString("Caddie"); //On récupère le caddie de la BD
+                            ArrayList<String> OldCaddie = StringToCaddie(RowCaddie);
+                            RestoreTickets(OldCaddie); //On remet les tickets préalablement enlevés
+                            //Puis supprimer le caddie de la BD.
+                            query = "delete from PANIERS where numID = " + res.getString("numID") + ";";
+                            MyDBUtils.MyUpdate(query, getConnection());
+                            System.out.println("TIMEOUT > Le caddie avec l'ID " + res.getString("numID") + " a bien été supprimé");
+                        }
                     }
+                    
+                } catch (InterruptedException ex) {
+                   System.out.println("Thread 'CaddieChecker' interrompu !");
                 } catch (SQLException ex) {
-                    Logger.getLogger(ServletConnection.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println(ex.getLocalizedMessage());
                 }
             }
-        }
+        };
+        
+        CaddieChecker.start();
     }
     
     private int CalculerTotal(){
@@ -321,6 +329,86 @@ public class ServletConnection extends HttpServlet{
         }
         
         return Total;
+    }
+    
+    //Converti le Caddie utilisé par la Servlet en Caddie pouvant être écrit dans la base de donnée
+    private String CaddieToString(ArrayList<String> list){
+        String ReturnValue = "";
+        for(String str : list){
+            ReturnValue += str;
+            ReturnValue += "||"; //Séparateur du Caddie
+        }
+        return ReturnValue;
+    }
+    
+    //Converti le Caddie lu de la base de donnée en Caddie utilisé par la servlet
+    private ArrayList<String> StringToCaddie(String SQLRow){
+        ArrayList<String> ReturnValue = new ArrayList<>();
+        String[] Rows;
+        Rows = SQLRow.split("||");
+        
+        int l = Rows.length;
+        
+        for(int i = 0; i<l; i++){
+            ReturnValue.add(Rows[i]);
+        }
+        
+        return ReturnValue;
+    }
+    
+    private void InsertCaddie(ArrayList<String> NewCaddie) throws SQLException{
+        if(UserNoCart()){
+            String query = "insert into PANIERS(DateAjout, DatePeremption, User, Caddie) values(?, DATE_ADD(?, INTERVAL 30 MINUTE), ?, ?)";
+            pst = getConnection().prepareStatement(query);
+            pst.setDate(1, getCurrentDate());
+            pst.setDate(2, getCurrentDate());
+            pst.setString(3, (String)currentSession.getAttribute("login"));
+            pst.setString(4, CaddieToString(NewCaddie));
+        }
+    }
+    
+    private void RestoreTickets(ArrayList<String> OldCaddie){
+        if(OldCaddie != null){
+            for(String str : OldCaddie){
+                String[] row = str.split(";");
+                System.out.println("RestoreTickets > ROW : " + str);
+                String update = "update VOLS set nbreBillets = (nbreBillets + ?) where destination like ?";
+                try {
+                    pst = getConnection().prepareStatement(update);
+                    pst.setString(1, row[2]);
+                    pst.setString(2, row[0]);
+
+                    if((pst.executeUpdate()) > 0){
+                        System.out.println("Nombre de billets mit à jour correctement");
+                    }
+                } catch (SQLException ex) {
+                    Logger.getLogger(ServletConnection.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }   
+    }
+    
+    private boolean UserNoCart(){
+        String query = "select User from PANIERS;";
+        try {
+            ResultSet res = MyDBUtils.MySelect(query, getConnection());
+            if(res.next())
+                return false; //Faux, l'utilisateur a un caddie d'existant.
+            else return true; //Vrai, l'utilisateur n'a pas de caddie déjà existant.
+        } catch (SQLException ex) {
+            Logger.getLogger(ServletConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return false;
+    }
+    
+    private synchronized java.sql.Date getCurrentDate(){ //Je précise que c'est un java.sql.Date et non pas un java.util.Date pour la lisibilité, sinon pas besoin
+        Date CurrentDate = new Date(new java.util.Date().getTime()); //Convertir java.util.date en java.sql.date
+        return CurrentDate;
+    }
+    
+    private synchronized Connection getConnection(){
+        return conn;
     }
     
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

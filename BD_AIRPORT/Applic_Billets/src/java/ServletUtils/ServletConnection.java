@@ -90,15 +90,17 @@ public class ServletConnection extends HttpServlet{
                 }
                 
                 if(request.getParameter("disconnect") != null){
-                    currentSession.setAttribute("Caddie", null);
-                    RestoreTickets(Caddie);
-                    String delete = "delete from PANIERS where User like ?";
-                    try {
-                        pst = getConnection().prepareStatement(delete);
-                        pst.setString(1, (String)currentSession.getAttribute("login"));
-                        pst.executeUpdate();
-                    } catch (SQLException ex) {
-                        System.out.println(ex.getLocalizedMessage());
+                    synchronized(this){
+                        currentSession.setAttribute("Caddie", null);
+                        RestoreTickets(Caddie);
+                        String delete = "delete from PANIERS where User like ?";
+                        try {
+                            pst = getConnection().prepareStatement(delete);
+                            pst.setString(1, (String)currentSession.getAttribute("login"));
+                            pst.executeUpdate();
+                        } catch (SQLException ex) {
+                            System.out.println(ex.getLocalizedMessage());
+                        }
                     }
                     
                     request.getSession().invalidate();
@@ -135,12 +137,14 @@ public class ServletConnection extends HttpServlet{
                                 //Et on met à jour la table afin de décrémenter le nombre maximum de billets.
                                 //Billets réservés = promesse, quelqu'un d'autre ne doit pas pouvoir venir prendre les billets
                                 //d'un autre dans son caddie, donc on met la BDD à jour ici.
-                                String update = "update VOLS set nbreBillets = (nbreBillets - ?) where destination like ?";
-                                pst = getConnection().prepareStatement(update);
-                                pst.setString(1, quantities[i]);
-                                pst.setString(2, rs.getString("destination"));
-                                if((pst.executeUpdate()) > 0){
-                                    System.out.println("Nombre de billets mit à jour correctement");
+                                synchronized(this){
+                                    String update = "update VOLS set nbreBillets = (nbreBillets - ?) where destination like ?";
+                                    pst = getConnection().prepareStatement(update);
+                                    pst.setString(1, quantities[i]);
+                                    pst.setString(2, rs.getString("destination"));
+                                    if((pst.executeUpdate()) > 0){
+                                        System.out.println("Nombre de billets mit à jour correctement");
+                                    }
                                 }
                             }
                             i++;
@@ -193,50 +197,52 @@ public class ServletConnection extends HttpServlet{
                                 for(String str : Caddie){
                                     String[] Values = str.split(";");
                                     for(int i = 0; i < Integer.parseInt(Values[2]) ; i++){//Générer 1 billet par quantité par destination.
-                                        //1) Génération d'un billet
-                                        String insertBillet = "insert into BILLETS(numBillet, numVol) values(?, ?)";
-                                        String IDBillet = Values[3]+"-"+GenerateHexString();
-                                        pst = getConnection().prepareStatement(insertBillet);
-                                        //Values[3] vaut le champ numVol de la table Vols, enregistré dans le Caddie.
-                                        pst.setString(1, IDBillet);
-                                        pst.setString(2, Values[3]);
-                                        
-                                        //2) Générer la facture
-                                        String insertFacture = "insert into FACTURES(nom, prenom, rue, commune, codePostal, paiement, IDBillet) values(?, ?, ?, ?, ?, ?, ?)";
-                                        PreparedStatement pst2 = getConnection().prepareStatement(insertFacture);
-                                        pst2.setString(1, request.getParameter("name"));
-                                        pst2.setString(2, request.getParameter("surname"));
-                                        pst2.setString(3, request.getParameter("street"));
-                                        pst2.setString(4, request.getParameter("town"));
-                                        pst2.setString(5, request.getParameter("postalCode"));
-                                        pst2.setString(6, Total);
-                                        pst2.setString(7, IDBillet);
-                                        
-                                        if(pst.executeUpdate() > 0){
-                                            System.out.println("Billet généré et ajouté à la BD");
-                                            if(pst2.executeUpdate() > 0){
-                                                System.out.println("Facture générée et ajoutée à la BD");
-                                                request.setAttribute("message", "payOK");
-                                            
-                                                //3) On supprime le caddie qui a été payé
-                                                currentSession.setAttribute("Caddie", null);
-                                                String delete = "delete from PANIERS where User like ?";
-                                                pst = getConnection().prepareStatement(delete);
-                                                pst.setString(1, (String)currentSession.getAttribute("login"));
-                                                pst.executeUpdate();
+                                        synchronized(this){
+                                            //1) Génération d'un billet
+                                            String insertBillet = "insert into BILLETS(numBillet, numVol) values(?, ?)";
+                                            String IDBillet = Values[3]+"-"+GenerateHexString();
+                                            pst = getConnection().prepareStatement(insertBillet);
+                                            //Values[3] vaut le champ numVol de la table Vols, enregistré dans le Caddie.
+                                            pst.setString(1, IDBillet);
+                                            pst.setString(2, Values[3]);
 
-                                                //Et on redirige vers JSPInit
-                                                request.setAttribute("login", user);
-                                                ArrayList<String> list = PrepareMainPage(request, response);
-                                                request.setAttribute("ListeVols", list);
-                                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                                            //2) Générer la facture
+                                            String insertFacture = "insert into FACTURES(nom, prenom, rue, commune, codePostal, paiement, IDBillet) values(?, ?, ?, ?, ?, ?, ?)";
+                                            PreparedStatement pst2 = getConnection().prepareStatement(insertFacture);
+                                            pst2.setString(1, request.getParameter("name"));
+                                            pst2.setString(2, request.getParameter("surname"));
+                                            pst2.setString(3, request.getParameter("street"));
+                                            pst2.setString(4, request.getParameter("town"));
+                                            pst2.setString(5, request.getParameter("postalCode"));
+                                            pst2.setString(6, Total);
+                                            pst2.setString(7, IDBillet);
+
+                                            if(pst.executeUpdate() > 0){
+                                                System.out.println("Billet généré et ajouté à la BD");
+                                                if(pst2.executeUpdate() > 0){
+                                                    System.out.println("Facture générée et ajoutée à la BD");
+                                                    request.setAttribute("message", "payOK");
+
+                                                    //3) On supprime le caddie qui a été payé
+                                                    currentSession.setAttribute("Caddie", null);
+                                                    String delete = "delete from PANIERS where User like ?";
+                                                    pst = getConnection().prepareStatement(delete);
+                                                    pst.setString(1, (String)currentSession.getAttribute("login"));
+                                                    pst.executeUpdate();
+
+                                                    //Et on redirige vers JSPInit
+                                                    request.setAttribute("login", user);
+                                                    ArrayList<String> list = PrepareMainPage(request, response);
+                                                    request.setAttribute("ListeVols", list);
+                                                    this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+
+                                                }
 
                                             }
-                                            
-                                        }
-                                        else{
-                                            request.setAttribute("message", "payNOK");
-                                            this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                                            else{
+                                                request.setAttribute("message", "payNOK");
+                                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                                            }
                                         }
                                     }
                                 } 
@@ -246,10 +252,12 @@ public class ServletConnection extends HttpServlet{
                     
                     if(newClient == null) //Client déjà existant
                     {
-                       pst = getConnection().prepareStatement("Select login, password from AUTHENTICATION where login=? and password=?");
-                       pst.setString(1, user);
-                       pst.setString(2, pass);
-                       rs = pst.executeQuery();
+                       synchronized(this){
+                        pst = getConnection().prepareStatement("Select login, password from AUTHENTICATION where login=? and password=?");
+                        pst.setString(1, user);
+                        pst.setString(2, pass);
+                        rs = pst.executeQuery();
+                       }
                        if (rs.next()) {
                            //Si le resultset contient un tuple, c'est que le select a donné un résultat positif
                            out.println("Correct login credentials");
@@ -289,18 +297,21 @@ public class ServletConnection extends HttpServlet{
                        else{
                             //Création d'un nouvel utilisateur -> Insertion dans la table AUTHENTICATION
                             //des credentials.
-                            PreparedStatement pst = getConnection().prepareStatement("insert into AUTHENTICATION values ('"+user+"','"+pass+"');");
-                            out.println("<br/>");
-                            int res = pst.executeUpdate();
-                            if(res > 0){
-                                //Nouveau client correctement créé -> On redirect comme pour une connexion normale
-                                out.println("New user " + user + " was successfully created");
-                                ArrayList<String> list = PrepareMainPage(request, response);
-                                request.setAttribute("ListeVols", list);
-                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                            synchronized(this){
+                                PreparedStatement pst = getConnection().prepareStatement("insert into AUTHENTICATION values ('"+user+"','"+pass+"');");
+                                out.println("<br/>");
+                                int res = pst.executeUpdate();
+                            
+                                if(res > 0){
+                                    //Nouveau client correctement créé -> On redirect comme pour une connexion normale
+                                    out.println("New user " + user + " was successfully created");
+                                    ArrayList<String> list = PrepareMainPage(request, response);
+                                    request.setAttribute("ListeVols", list);
+                                    this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                                }
+                                else
+                                    out.println("Error while creating new user " + user);
                             }
-                            else
-                                out.println("Error while creating new user " + user);
                        }
                     }
                 } 
@@ -320,15 +331,17 @@ public class ServletConnection extends HttpServlet{
         String query = "select destination, numVol, nbreBillets, prix from VOLS;";
         ArrayList<String> list = null;
         try{
-        request.setAttribute("login", currentSession.getAttribute("login"));
-        request.setAttribute("password", currentSession.getAttribute("password"));
-        pst = getConnection().prepareStatement(query);
-        rs = pst.executeQuery();
-        list = new ArrayList<>();
-        while(rs.next()){
-            String row = rs.getString("destination") + ";" + rs.getString("numVol") + ";" + rs.getString("nbreBillets") + ";" + rs.getString("prix");
-            list.add(row);
-        }
+            synchronized(this){
+                request.setAttribute("login", currentSession.getAttribute("login"));
+                request.setAttribute("password", currentSession.getAttribute("password"));
+                pst = getConnection().prepareStatement(query);
+                rs = pst.executeQuery();
+                list = new ArrayList<>();
+                while(rs.next()){
+                    String row = rs.getString("destination") + ";" + rs.getString("numVol") + ";" + rs.getString("nbreBillets") + ";" + rs.getString("prix");
+                    list.add(row);
+                }
+            }
         }
         catch(Exception ex){
             System.out.println(ex.getLocalizedMessage());
@@ -408,14 +421,16 @@ public class ServletConnection extends HttpServlet{
     
     private void InsertCaddie(ArrayList<String> NewCaddie) throws SQLException{
         if(UserNoCart()){
-            String query = "insert into PANIERS(DateAjout, DatePeremption, User, Caddie) values(?, DATE_ADD(?, INTERVAL 30 MINUTE), ?, ?)";
-            pst = getConnection().prepareStatement(query);
-            pst.setDate(1, getCurrentDate());
-            pst.setDate(2, getCurrentDate());
-            pst.setString(3, (String)currentSession.getAttribute("login"));
-            pst.setString(4, CaddieToString(NewCaddie));
-            if(pst.executeUpdate() > 0){
-                System.out.println("Insert> Caddie enregistré dans la BD");
+            synchronized(this){
+                String query = "insert into PANIERS(DateAjout, DatePeremption, User, Caddie) values(?, DATE_ADD(?, INTERVAL 30 MINUTE), ?, ?)";
+                pst = getConnection().prepareStatement(query);
+                pst.setDate(1, getCurrentDate());
+                pst.setDate(2, getCurrentDate());
+                pst.setString(3, (String)currentSession.getAttribute("login"));
+                pst.setString(4, CaddieToString(NewCaddie));
+                if(pst.executeUpdate() > 0){
+                    System.out.println("Insert> Caddie enregistré dans la BD");
+                }
             }
         }
     }
@@ -427,12 +442,14 @@ public class ServletConnection extends HttpServlet{
                 System.out.println("RestoreTickets > ROW : " + str);
                 String update = "update VOLS set nbreBillets = (nbreBillets + ?) where destination like ?";
                 try {
-                    pst = getConnection().prepareStatement(update);
-                    pst.setString(1, row[2]);
-                    pst.setString(2, row[0]);
+                    synchronized(this){
+                        pst = getConnection().prepareStatement(update);
+                        pst.setString(1, row[2]);
+                        pst.setString(2, row[0]);
 
-                    if((pst.executeUpdate()) > 0){
-                        System.out.println("Nombre de billets mit à jour correctement");
+                        if((pst.executeUpdate()) > 0){
+                            System.out.println("Nombre de billets mit à jour correctement");
+                        }
                     }
                 } catch (SQLException ex) {
                     Logger.getLogger(ServletConnection.class.getName()).log(Level.SEVERE, null, ex);

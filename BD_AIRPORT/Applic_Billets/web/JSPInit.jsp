@@ -58,10 +58,13 @@
           <div class="ErrorContainer" style="margin:auto; padding:auto; clear:both;">
               <% 
                     if(request.getParameter("message")!= null){
-                        if(request.getParameter("message").equals("payOK"));
+                        if(request.getParameter("message").equals("payOK"))
                         %> <p style="color:green; font-size: 14px; font-family: Verdana, sans-serif;"> Merci pour votre achat ! </p> <% 
-                        if(request.getParameter("message").equals("payNOK"));{
+                        if(request.getParameter("message").equals("payNOK")){
                         %> <p style="color:red; font-size: 14px; font-family: Verdana, sans-serif;"> L'achat n'a pas pu être terminé, vous n'avez pas été débité. </p> <%
+                        }
+                        if(request.getParameter("message").equals("caddieAlreadyExists")){
+                        %> <p style="color:red; font-size: 14px; font-family: Verdana, sans-serif;"> Vous avez déjà un caddie !</p><%
                         }
                     }
               %>

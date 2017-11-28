@@ -90,8 +90,16 @@ public class ServletConnection extends HttpServlet{
                 }
                 
                 if(request.getParameter("disconnect") != null){
-                    request.setAttribute("disconnect", null);
-                    
+                    currentSession.setAttribute("Caddie", null);
+                    RestoreTickets(Caddie);
+                    String delete = "delete from PANIERS where User like ?";
+                    try {
+                        pst = getConnection().prepareStatement(delete);
+                        pst.setString(1, (String)currentSession.getAttribute("login"));
+                        pst.executeUpdate();
+                    } catch (SQLException ex) {
+                        System.out.println(ex.getLocalizedMessage());
+                    }
                     
                     request.getSession().invalidate();
                     request.setAttribute("errorMessage", "disconnectOK");
@@ -141,7 +149,7 @@ public class ServletConnection extends HttpServlet{
                         //Une fois le caddie créé / initialisé, on l'enregistre dans la BD,
                         //on le donne en prochain paramètre à la requête
                         //Et on redirige vers la page de visionnement du Caddie.
-                        
+                        System.out.println(UserNoCart());
                         if(UserNoCart()){
                             //L'utilisateur ne peut initier qu'un Caddie. Pour l'instant il doit terminer son caddie
                             //Avant d'en initier un autre -> Il ne pourra donc pas rajouter des objets... Pas le temps de gérer ça.
@@ -150,6 +158,11 @@ public class ServletConnection extends HttpServlet{
                             request.setAttribute("Caddie", Caddie);
                             request.setAttribute("login", currentSession.getAttribute("login"));
                             this.getServletContext().getRequestDispatcher("/JSPCaddie.jsp").forward(request, response);
+                        }
+                        else{
+                            request.setAttribute("login", currentSession.getAttribute("login"));
+                            request.setAttribute("message", "");
+                            this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
                         }
                     }
                     
@@ -182,14 +195,14 @@ public class ServletConnection extends HttpServlet{
                                     for(int i = 0; i < Integer.parseInt(Values[2]) ; i++){//Générer 1 billet par quantité par destination.
                                         //1) Génération d'un billet
                                         String insertBillet = "insert into BILLETS(numBillet, numVol) values(?, ?)";
-                                        String IDBillet = Values[3]+GenerateHexString();
+                                        String IDBillet = Values[3]+"-"+GenerateHexString();
                                         pst = getConnection().prepareStatement(insertBillet);
                                         //Values[3] vaut le champ numVol de la table Vols, enregistré dans le Caddie.
                                         pst.setString(1, IDBillet);
                                         pst.setString(2, Values[3]);
                                         
                                         //2) Générer la facture
-                                        String insertFacture = "insert into FACTURES(nom, prenom, rue, commune, codePostal, paiement) values(?, ?, ?, ?, ?, ?, ?)";
+                                        String insertFacture = "insert into FACTURES(nom, prenom, rue, commune, codePostal, paiement, IDBillet) values(?, ?, ?, ?, ?, ?, ?)";
                                         PreparedStatement pst2 = getConnection().prepareStatement(insertFacture);
                                         pst2.setString(1, request.getParameter("name"));
                                         pst2.setString(2, request.getParameter("surname"));
@@ -199,15 +212,27 @@ public class ServletConnection extends HttpServlet{
                                         pst2.setString(6, Total);
                                         pst2.setString(7, IDBillet);
                                         
-                                        if(pst.executeUpdate() > 0 && pst2.executeUpdate() > 0){
-                                            request.setAttribute("message", "payOK");
-                                            currentSession.setAttribute("Caddie", null); //On supprime le caddie.
+                                        if(pst.executeUpdate() > 0){
+                                            System.out.println("Billet généré et ajouté à la BD");
+                                            if(pst2.executeUpdate() > 0){
+                                                System.out.println("Facture générée et ajoutée à la BD");
+                                                request.setAttribute("message", "payOK");
+                                            
+                                                //3) On supprime le caddie qui a été payé
+                                                currentSession.setAttribute("Caddie", null);
+                                                String delete = "delete from PANIERS where User like ?";
+                                                pst = getConnection().prepareStatement(delete);
+                                                pst.setString(1, (String)currentSession.getAttribute("login"));
+                                                pst.executeUpdate();
 
-                                            //Et on redirige vers JSPInit
-                                            request.setAttribute("login", user);
-                                            ArrayList<String> list = PrepareMainPage(request, response);
-                                            request.setAttribute("ListeVols", list);
-                                            this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+                                                //Et on redirige vers JSPInit
+                                                request.setAttribute("login", user);
+                                                ArrayList<String> list = PrepareMainPage(request, response);
+                                                request.setAttribute("ListeVols", list);
+                                                this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
+
+                                            }
+                                            
                                         }
                                         else{
                                             request.setAttribute("message", "payNOK");
@@ -389,6 +414,9 @@ public class ServletConnection extends HttpServlet{
             pst.setDate(2, getCurrentDate());
             pst.setString(3, (String)currentSession.getAttribute("login"));
             pst.setString(4, CaddieToString(NewCaddie));
+            if(pst.executeUpdate() > 0){
+                System.out.println("Insert> Caddie enregistré dans la BD");
+            }
         }
     }
     
@@ -415,10 +443,8 @@ public class ServletConnection extends HttpServlet{
     
     //Regarde si l'utilisateur actuel a un caddie enregistré dans la BD ou non.
     private boolean UserNoCart(){
-        String query = "select User from PANIERS where User like ?";
+        String query = "select User from PANIERS where User like '" + (String)currentSession.getAttribute("login") + "';";
         try {
-            pst = getConnection().prepareStatement(query);
-            pst.setString(1, (String)currentSession.getAttribute("login"));
             ResultSet res = MyDBUtils.MySelect(query, getConnection());
             if(res.next())
                 return false; //Faux, l'utilisateur a un caddie d'existant.

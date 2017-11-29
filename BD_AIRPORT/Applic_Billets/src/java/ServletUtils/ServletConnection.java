@@ -353,7 +353,8 @@ public class ServletConnection extends HttpServlet{
     private void InitTimerThread(){
         Thread CaddieChecker = new Thread() {
             public void run() {
-                try {
+                while(!isInterrupted()){
+                    try {
                     Thread.sleep(60*1000);
                     String query = "select * from PANIERS";
                     ResultSet res = MyDBUtils.MySelect(query, getConnection());
@@ -371,11 +372,12 @@ public class ServletConnection extends HttpServlet{
                             System.out.println("TIMEOUT > Le caddie avec l'ID " + res.getString("numID") + " a bien été supprimé");
                         }
                     }
-                    
-                } catch (InterruptedException ex) {
-                   System.out.println("Thread 'CaddieChecker' interrompu !");
-                } catch (SQLException ex) {
-                    System.out.println(ex.getLocalizedMessage());
+
+                    } catch (InterruptedException ex) {
+                       System.out.println("Thread 'CaddieChecker' interrompu !");
+                    } catch (SQLException ex) {
+                        System.out.println(ex.getLocalizedMessage());
+                    }
                 }
             }
         };

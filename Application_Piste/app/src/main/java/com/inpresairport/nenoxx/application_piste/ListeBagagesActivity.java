@@ -1,6 +1,7 @@
 package com.inpresairport.nenoxx.application_piste;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -17,6 +18,8 @@ import android.widget.ListView;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import ProtocoleLUGAP.ReponseLUGAP;
 import ProtocoleLUGAP.RequeteLUGAP;
@@ -26,9 +29,11 @@ public class ListeBagagesActivity extends AppCompatActivity {
     private ArrayAdapter<String> Adapter = null;
     private ArrayList<String> ListeBagages = null;
     private ArrayList<String> EtatBagage = null;
+    private ArrayList<String> BagageCharge = null;
     private ObjectInputStream ois = null;
     private ObjectOutputStream oos = null;
     private String numVol = "";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +58,7 @@ public class ListeBagagesActivity extends AppCompatActivity {
         //Init de la view list
         ListeBagages = new ArrayList<String>();
         EtatBagage = new ArrayList<>();
+        BagageCharge = new ArrayList<>();
         this.mListView = (ListView) findViewById(R.id.viewBagages);
         Adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_checked, ListeBagages);
         this.mListView.setAdapter(Adapter);
@@ -67,25 +73,52 @@ public class ListeBagagesActivity extends AppCompatActivity {
             }
         });
 
+        Button ButtonBagageCharge = findViewById(R.id.buttonListCharge);
+        ButtonBagageCharge.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), ListeBagagesChargesActivity.class);
+                intent.putExtra("ListeBagage", BagageCharge);
+                startActivity(intent);
+            }
+        });
+
         Button charger = findViewById(R.id.buttonCharger);
         charger.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 SparseBooleanArray checked = mListView.getCheckedItemPositions();
-                for(int j = 0; j < mListView.getAdapter().getCount(); j++){
+                //On parcoure la liste à l'envers, car on supprime sur des positions fixes
+                //Or l'index de la liste se met à jour automatiquement lors des suppressions
+                //En partant de la fin de la liste, on a pas à se soucier de ça.
+
+                for(int j = mListView.getAdapter().getCount()-1; j >= 0; j--){
                     if(checked.get(j)){
                         String bagage = ListeBagages.get(j);
                         String update = "update BAGAGES set charge = 'O' " +
-                                "        where numBagage = '"+ bagage.substring(0, bagage.length() - 2)+"';";
+                                "where numBagage = '"+ bagage.substring(0, bagage.length() - 2)+"';";
                         UpdateBDD u = new UpdateBDD();
                         u.execute(update);
 
                         //Leur état est passé à "O" pour "chargé" donc on les enlève.
+                        //Et on les ajoute à la liste des bagages chargés
+                        BagageCharge.add(Adapter.getItem(j));
+
                         EtatBagage.remove(j);
+                        ListeBagages.remove(ListeBagages.get(j));
                         Adapter.remove(Adapter.getItem(j));
                         Adapter.notifyDataSetChanged();
                     }
                 }
+
+                //On trie cette liste là histoire que ça soit propre.
+                Collections.sort(BagageCharge, new Comparator<String>() {
+                    @Override
+                    public int compare(String s, String t1) {
+                        return s.compareTo(t1);
+                    }
+                });
             }
         });
 
@@ -132,6 +165,10 @@ public class ListeBagagesActivity extends AppCompatActivity {
                             Adapter.add("n° " + tmp[0]);
                             System.out.println("élément ajouté : " + s);
                             Adapter.notifyDataSetChanged();
+                        }
+                        else{
+                            BagageCharge.add(tmp[0]);
+                            System.out.println("Bagage chargé : " + tmp[0] +  " ajouté à la liste");
                         }
 
                     }

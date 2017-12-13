@@ -15,4 +15,5 @@ import java.sql.Connection;
  */
 public interface Requete {
     public Runnable createRunnable (ObjectOutputStream oos, ObjectInputStream ois, Connection conn , ConsoleServeur cs);
+    public Runnable createRunnable (ObjectOutputStream oos, ObjectInputStream ois, Connection conn);
 }

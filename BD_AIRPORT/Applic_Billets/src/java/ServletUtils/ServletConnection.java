@@ -41,6 +41,7 @@ public class ServletConnection extends HttpServlet{
     HttpSession currentSession = null;
     ArrayList<String> Caddie = null;
     Connection conn = null;
+    boolean ThreadAlreadyLaunched = false;
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -68,8 +69,7 @@ public class ServletConnection extends HttpServlet{
                 String pass = request.getParameter("password");
                 
                 currentSession = request.getSession();
-                Caddie = (ArrayList<String>)currentSession.getAttribute("Caddie"); 
-                //Pour ne pas écraser l'ancien caddie, on essaie de le récupérer s'il existe. Sinon = null.
+                //Caddie = (ArrayList<String>)currentSession.getAttribute("Caddie"); 
                 
                 if(currentSession.getAttribute("login") == null){
                     //Ne doit normalement se faire qu'une seule fois par session.
@@ -90,8 +90,7 @@ public class ServletConnection extends HttpServlet{
                 }
                 
                 if(request.getParameter("disconnect") != null){
-                    synchronized(this){
-                        currentSession.setAttribute("Caddie", null);
+                    /*synchronized(this){
                         RestoreTickets(Caddie);
                         String delete = "delete from PANIERS where User like ?";
                         try {
@@ -101,7 +100,7 @@ public class ServletConnection extends HttpServlet{
                         } catch (SQLException ex) {
                             System.out.println(ex.getLocalizedMessage());
                         }
-                    }
+                    } */
                     
                     request.getSession().invalidate();
                     request.setAttribute("errorMessage", "disconnectOK");
@@ -113,7 +112,8 @@ public class ServletConnection extends HttpServlet{
                     //Connexion à la BD MySQL
                     Class.forName("com.mysql.jdbc.Driver");
                     conn = MyDBUtils.MyConnection(1, "mich", "password"); //Compte ne pouvant faire que des select, insert, update
-                    
+                    Caddie = GetCaddie((String)currentSession.getAttribute("login"));
+                    currentSession.setAttribute("Caddie", Caddie);
                     // --- INITIALISATION DU CADDIE ---
                     if((quantities = request.getParameterValues("quantity")) != null){
                         int i = 0;
@@ -132,7 +132,7 @@ public class ServletConnection extends HttpServlet{
                                 //Cas où l'utilisateur a demandé au moins un billet pour cette destination
                                 String rowCaddie = rs.getString("destination") + ";" + rs.getString("prix") + ";" + quantities[i] + ";" + rs.getString("numVol");
                                 Caddie.add(rowCaddie);
-                                System.out.println("Ajouté au caddie : "  + rs.getString("destination") + " x" + quantities[i]);
+                                System.out.println("Ajouté au caddie : "  + rs.getString("destination") + " x" + quantities[i] + "numvol : " + rs.getString("numVol"));
                                 
                                 //Et on met à jour la table afin de décrémenter le nombre maximum de billets.
                                 //Billets réservés = promesse, quelqu'un d'autre ne doit pas pouvoir venir prendre les billets
@@ -172,6 +172,7 @@ public class ServletConnection extends HttpServlet{
                     
                     //Quand on clique sur l'onglet "Mon panier" de la barre bleue
                     if(request.getParameter("reloadCaddie") != null){ 
+                        Caddie = GetCaddie((String) currentSession.getAttribute("login"));
                         request.setAttribute("Caddie", currentSession.getAttribute("Caddie"));
                         request.setAttribute("login", currentSession.getAttribute("login"));
                         request.setAttribute("password", currentSession.getAttribute("password"));
@@ -196,7 +197,7 @@ public class ServletConnection extends HttpServlet{
                                 Caddie = (ArrayList<String>)currentSession.getAttribute("Caddie"); //Le caddie dans la DB est le même que celui en mémoire
                                 for(String str : Caddie){
                                     String[] Values = str.split(";");
-                                    for(int i = 0; i < Integer.parseInt(Values[2]) ; i++){//Générer 1 billet par quantité par destination.
+                                    for(int i = 0; i <= Integer.parseInt(Values[2]) ; i++){//Générer 1 billet par quantité par destination.
                                         synchronized(this){
                                             //1) Génération d'un billet
                                             String insertBillet = "insert into BILLETS(numBillet, numVol) values(?, ?)";
@@ -231,7 +232,7 @@ public class ServletConnection extends HttpServlet{
                                                     pst.executeUpdate();
 
                                                     //Et on redirige vers JSPInit
-                                                    request.setAttribute("login", user);
+                                                    request.setAttribute("login", currentSession.getAttribute("login"));
                                                     ArrayList<String> list = PrepareMainPage(request, response);
                                                     request.setAttribute("ListeVols", list);
                                                     this.getServletContext().getRequestDispatcher("/JSPInit.jsp").forward(request, response);
@@ -351,11 +352,14 @@ public class ServletConnection extends HttpServlet{
     }
     
     private void InitTimerThread(){
+        System.out.println("Thread lancé");
+        ThreadAlreadyLaunched = true;
         Thread CaddieChecker = new Thread() {
             public void run() {
-                while(!isInterrupted()){
+                while(true){
                     try {
                     Thread.sleep(60*1000);
+                    //System.out.println("Sortie du sleep");
                     String query = "select * from PANIERS";
                     ResultSet res = MyDBUtils.MySelect(query, getConnection());
                     while(res.next()){
@@ -369,6 +373,8 @@ public class ServletConnection extends HttpServlet{
                             //Puis supprimer le caddie de la BD.
                             query = "delete from PANIERS where numID = " + res.getString("numID") + ";";
                             MyDBUtils.MyUpdate(query, getConnection());
+                            currentSession.setAttribute("Caddie", null);
+                            Caddie = null;
                             System.out.println("TIMEOUT > Le caddie avec l'ID " + res.getString("numID") + " a bien été supprimé");
                         }
                     }
@@ -398,19 +404,29 @@ public class ServletConnection extends HttpServlet{
     
     //Converti le Caddie utilisé par la Servlet en Caddie pouvant être écrit dans la base de donnée
     private String CaddieToString(ArrayList<String> list){
+        if(list == null)
+            return null;
+        
         String ReturnValue = "";
         for(String str : list){
             ReturnValue += str;
-            ReturnValue += "||"; //Séparateur du Caddie
+            ReturnValue += "&"; //Séparateur du Caddie
+        }
+        
+        if(!ReturnValue.isEmpty()){
+            ReturnValue = ReturnValue.substring(0, ReturnValue.length() - 1);
         }
         return ReturnValue;
     }
     
     //Converti le Caddie lu de la base de donnée en Caddie utilisé par la servlet
     private ArrayList<String> StringToCaddie(String SQLRow){
+        if(SQLRow == null || SQLRow.isEmpty())
+            return null;
+        
         ArrayList<String> ReturnValue = new ArrayList<>();
         String[] Rows;
-        Rows = SQLRow.split("||");
+        Rows = SQLRow.split("&");
         
         int l = Rows.length;
         
@@ -489,6 +505,24 @@ public class ServletConnection extends HttpServlet{
         int RandValue = rand.nextInt(0xFFFFFF);
         String result = Integer.toHexString(RandValue);
         return result;
+    }
+    
+    //Va rechercher le caddie du user dans la BD
+    private ArrayList<String> GetCaddie(String user){
+        try {
+            String query = "select Caddie from PANIERS where User like '" + user +"';";
+            rs = MyDBUtils.MySelect(query, getConnection());
+            if(rs.next()){
+            ArrayList<String> Caddietmp = new ArrayList<>();
+            String DBCaddie = rs.getString("Caddie");
+            System.out.println("Caddie récupéré : " + DBCaddie);
+            Caddietmp = StringToCaddie(DBCaddie);
+            return Caddietmp;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(ServletConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
     
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">

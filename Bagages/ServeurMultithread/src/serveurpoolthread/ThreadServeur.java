@@ -8,9 +8,9 @@ package serveurpoolthread;
 import java.net.*;
 import java.io.*;
 import java.sql.*;
-import static myutils.MyDBUtils.MyConnection;
+import static Utils.MyDBUtils.MyConnection;
 import requetepoolthreads.ConsoleServeur;
-import static myutils.MyPropUtils.myGetProperty;
+import static Utils.MyPropUtils.myGetProperty;
 
 /**
  *

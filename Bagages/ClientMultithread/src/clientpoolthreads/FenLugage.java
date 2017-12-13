@@ -15,10 +15,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import myutils.MyDBUtils;
+import Utils.MyDBUtils;
 import net.proteanit.sql.DbUtils;
-import protocoleLUGAP.ReponseLUGAP;
-import protocoleLUGAP.RequeteLUGAP;
+import ProtocoleLUGAP.ReponseLUGAP;
+import ProtocoleLUGAP.RequeteLUGAP;
 
 /**
  *

@@ -40,7 +40,7 @@ public class SnmpListener implements ResponseListener
         //Récupération de la réponse et affichage de celle-ci
         PDU rep = event.getResponse();
 
-        if(rep.getErrorStatusText().equals("Success"))
+        if(rep != null && rep.getErrorStatusText().equals("Success"))
         {
             VariableBinding vb = rep.get(0);
             Variable value = vb.getVariable();

@@ -102,7 +102,7 @@ public class Server_ManagerGUI extends javax.swing.JFrame {
             String line;
             while((line = buffer.readLine()) != null) 
             {
-                trouve = Trouve100(line); //Sous Linux -> 100% = 100% de packet loss
+                trouve = Trouve100(line); //Sous Linux -> 100% = 100% de packet loss <> Windows -> 100% = 0% packet loss
                 if(trouve == true)
                 {
                     showMessageDialog(this, "L'adresse " + IPDestTF.getText() + " ne repond pas.", "Error", ERROR_MESSAGE);
@@ -203,7 +203,7 @@ public class Server_ManagerGUI extends javax.swing.JFrame {
 
         OIDTF.setText(".1.3.6.1.2.1.1.1.0");
 
-        jLabel3.setText("New value :");
+        jLabel3.setText("Nouv. valeur :");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -232,7 +232,7 @@ public class Server_ManagerGUI extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(Community, javax.swing.GroupLayout.DEFAULT_SIZE, 114, Short.MAX_VALUE)
                             .addComponent(SetTF))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 118, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 110, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(GoButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(QuitButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -284,10 +284,11 @@ public class Server_ManagerGUI extends javax.swing.JFrame {
         AdresseIP = IPDestTF.getText() + "/161";
         OID = OIDTF.getText().substring(1).split("\\.");
         int[] stillOID = ToIntTab(OID);
-        target.setCommunity(new OctetString("2326ZAMD"));
+        target.setCommunity(new OctetString(Community.getText()));
         Address targetIP = new UdpAddress(AdresseIP);
         target.setAddress(targetIP);
         PDU pdu = new PDU();
+        boolean Selected = false;
         
         System.out.println("Tentative de ping de la machine distante...");
         if(!(Ping())){
@@ -297,25 +298,29 @@ public class Server_ManagerGUI extends javax.swing.JFrame {
                     pdu.setType(PDU.SET);
                     pdu.add(new VariableBinding(new OID(stillOID), new OctetString(SetTF.getText())));
                     snmp.set(pdu, target, null, listener);
-
+                    Selected = true;
                 }
                 else{
                     if(GetButton.isSelected()){
                             pdu.setType(PDU.GET);
                             pdu.add(new VariableBinding(new OID(stillOID)));
                             snmp.get(pdu, target, null, listener);
+                            Selected = true;
                     }
                     else{
                         if(GetNextButton.isSelected()){
                             pdu.setType(PDU.GETNEXT);
                             pdu.add(new VariableBinding(new OID(stillOID)));
-                            snmp.send(pdu, target, null, listener);                    
+                            snmp.send(pdu, target, null, listener);  
+                            Selected = true;
                         }
                     }
                 }
-                System.out.println("Requete SNMP envoyée à l'agent");
-                synchronized(snmp){
-                    snmp.wait();
+                if(Selected){
+                    System.out.println("Requete SNMP envoyée à l'agent");
+                    synchronized(snmp){
+                        snmp.wait();
+                    }
                 }
             }
             catch (Exception ex) {
@@ -323,8 +328,6 @@ public class Server_ManagerGUI extends javax.swing.JFrame {
             }
             
         }
-        
-        
     }//GEN-LAST:event_GoButtonActionPerformed
     
     private int[] ToIntTab(String[] str){

@@ -9,7 +9,7 @@ import java.util.*;
 import javax.swing.table.*;
 import java.io.*;
 import requetepoolthreads.ConsoleServeur;
-import static myutils.MyPropUtils.myGetProperty;
+import static Utils.MyPropUtils.myGetProperty;
 
 /**
  *

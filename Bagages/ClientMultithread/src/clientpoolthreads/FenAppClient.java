@@ -5,6 +5,8 @@
  */
 package clientpoolthreads;
 
+import ProtocoleLUGAP.ReponseLUGAP;
+import ProtocoleLUGAP.RequeteLUGAP;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -12,7 +14,6 @@ import java.io.*;
 import java.net.*;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import protocoleLUGAP.*;
 import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,9 +23,9 @@ import javax.swing.JTable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
-import static myutils.MyPropUtils.myGetProperty;
-import static myutils.MyCrypto.*;
-import myutils.MyDBUtils;
+import static Utils.MyPropUtils.myGetProperty;
+import static Utils.MyCrypto.*;
+import Utils.MyDBUtils;
 import net.proteanit.sql.DbUtils;
 /**
  *

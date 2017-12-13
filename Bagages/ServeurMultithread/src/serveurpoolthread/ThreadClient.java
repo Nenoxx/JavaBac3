@@ -5,6 +5,7 @@
  */
 package serveurpoolthread;
 
+import ProtocoleLUGAP.RequeteLUGAP;
 import java.io.*;
 import java.net.Socket;
 import java.sql.Connection;
@@ -77,10 +78,11 @@ public class ThreadClient extends Thread{
                 if(connecte){
                 System.out.println("Thread client " + num + ": nouvelle requete " + numReq + " recue");
                 cs.TraceEvenements(CSocket.getRemoteSocketAddress().toString()+"#Nouvelle requête(" + numReq + ")#Thread Client " + num);
-                
+
                 // crée un runnable travail
+                RequeteLUGAP tmp = (RequeteLUGAP)req;
+                System.out.println("Type requête : " + tmp.getType());
                 Runnable travail = req.createRunnable(oos, ois, con, cs);
-                
                 // demande à travail de faire le job de gestion de la requête
                 travail.run();
                 System.out.println("Thread client " + num + ": requete " + numReq + " traitée");
